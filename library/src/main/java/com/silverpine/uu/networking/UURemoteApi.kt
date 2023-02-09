@@ -4,6 +4,11 @@ class UURemoteApi
 {
     fun integrationTest()
     {
+
+    }
+
+    fun anotherTest()
+    {
         
     }
 }
