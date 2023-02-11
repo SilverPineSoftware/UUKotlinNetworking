@@ -101,7 +101,7 @@ open class UUDefaultHttpSession: UUHttpSession
                     {
                         responseCode = UUHttpErrorCode.authorizationNeeded
                     }
-                    
+
                     response.error = UUError(responseCode.value, UUHttp.ERROR_DOMAIN, userInfo = parsedError as? Parcelable)
 
                 }

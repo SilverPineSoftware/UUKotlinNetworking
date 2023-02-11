@@ -14,6 +14,19 @@ open class UUHttpResponse(val request: UUHttpRequest)
     var exception: Exception? = null
     val headers: UUHttpHeaders = UUHttpHeaders()
 
+
+    constructor(other: UUHttpResponse): this(other.request)
+    {
+        error = other.error
+        rawResponse = other.rawResponse
+        parsedResponse = other.parsedResponse
+        httpCode = other.httpCode
+        contentType = other.contentType
+        contentEncoding = other.contentEncoding
+        exception = other.exception
+        headers.putAll(other.headers)
+    }
+
     val wasSuccessful: Boolean
         get()
         {
