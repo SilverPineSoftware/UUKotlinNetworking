@@ -109,14 +109,14 @@ open class UURemoteApi(var session: UUHttpSession)
         isApiAuthorizationNeeded()
         { authorizationNeeded ->
 
-                if (authorizationNeeded)
-                {
-                    internalRenewApiAuthorization(completion)
-                }
-                else
-                {
-                    completion(null)
-                }
+            if (authorizationNeeded)
+            {
+                internalRenewApiAuthorization(completion)
+            }
+            else
+            {
+                completion(null)
+            }
         }
     }
 

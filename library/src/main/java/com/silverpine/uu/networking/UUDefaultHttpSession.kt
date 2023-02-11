@@ -116,7 +116,6 @@ open class UUDefaultHttpSession: UUHttpSession
         return response
     }
 
-
     private fun UUHttpRequest.uuOpenConnection(): HttpURLConnection?
     {
         val url = buildUrl() ?: return null
@@ -135,11 +134,6 @@ open class UUDefaultHttpSession: UUHttpSession
         urlConnection?.doInput = true
         urlConnection?.requestMethod = method.toString()
 
-//        headers.forEach()
-//        { key, value ->
-//            urlConnection?.setRequestProperty(key, value.joinToString(","))
-//        }
-
         if (useGZipCompression)
         {
             urlConnection?.setRequestProperty("Accept-Encoding", "gzip")
@@ -147,32 +141,6 @@ open class UUDefaultHttpSession: UUHttpSession
 
         return urlConnection
     }
-
-//    private fun HttpURLConnection.uuWrite(request: UUHttpRequest)
-//    {
-//        request.body?.let()
-//        { httpBody ->
-//
-//            httpBody.serializeBody()?.let()
-//            { requestBody ->
-//
-//                doOutput = true
-//                setFixedLengthStreamingMode(requestBody.size)
-//                setRequestProperty("Content-Type", httpBody.contentType)
-//                setRequestProperty("Content-Length", "${requestBody.size}")
-//
-//                if (request.useGZipCompression)
-//                {
-//                    // GZip it
-//                }
-//
-//                //UUHttpHeaders(headerFields).log("executeRequest", "RequestHeader")
-//                UULog.d(javaClass, "executeRequest", "RequestBody:\n\n${requestBody.uuUtf8()}\n\n")
-//
-//                uuWrite(requestBody)
-//            }
-//        }
-//    }
 
     private fun HttpURLConnection.uuWrite(body: ByteArray)
     {
@@ -218,29 +186,6 @@ open class UUDefaultHttpSession: UUHttpSession
             // Eat it
         }
     }
-
-
-
-    /*private fun HttpURLConnection.uuParseInto(response: UUHttpResponse)
-    {
-        try
-        {
-            if (responseCode.uuIsHttpSuccess())
-            {
-                response.parsedResponse = response.request.responseParser?.parse(inputStream)
-            }
-            else
-            {
-                val errorResponse = response.request.responseParser?.parse(errorStream)
-                response.error = UUError(UUHttpErrorCode.httpError.value, UUHttp.ERROR_DOMAIN, userInfo = errorResponse as? Parcelable)
-            }
-        }
-        catch (ex: Exception)
-        {
-            //return null
-            UULog.d(javaClass, "uuParseInto", "", ex)
-        }
-    }*/
 
     private fun HttpURLConnection.uuReadResponse(): ByteArray?
     {
