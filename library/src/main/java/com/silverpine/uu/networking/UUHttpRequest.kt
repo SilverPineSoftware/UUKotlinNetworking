@@ -11,7 +11,7 @@ open class UUHttpRequest(
     val timeout: Int = DEFAULT_TIMEOUT,
     val useGZipCompression: Boolean = true,
     val proxy: Proxy? = null,
-    var authorizationProvider: UUHttpAuthorizationProvider? = null,
+    //var authorizationProvider: UUHttpAuthorizationProvider? = null,
     var responseParser: UUHttpDataParser? = null,
     var errorParser: UUHttpDataParser? = null)
 {

@@ -2,13 +2,10 @@ package com.silverpine.uu.networking
 
 interface UUTokenAuthorizationProvider: UUHttpAuthorizationProvider
 {
-    override fun attachAuthorization(request: UUHttpRequest)
+    override fun attachAuthorization(headers: UUHttpHeaders)
     {
-        authorizationToken?.let()
-        { authToken ->
-            request.headers.putSingle("Authorization", "Bearer $authToken")
-        }
+        token?.let { headers.putSingle("Authorization", "Bearer $it") }
     }
 
-    var authorizationToken: String?
+    var token: String?
 }

@@ -1,15 +1,14 @@
 package com.silverpine.uu.sample.networking
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.annotation.Keep
+import androidx.appcompat.app.AppCompatActivity
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UURandom
 import com.silverpine.uu.networking.*
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
-import java.util.concurrent.CountDownLatch
 
 class MainActivity : AppCompatActivity()
 {
@@ -24,7 +23,7 @@ class MainActivity : AppCompatActivity()
 
     fun test_0001_simple_echo_post()
     {
-        val url = "https://spsw.io/uu/echo_json_post.php"
+        val uri = UUHttpUri("https://spsw.io/uu/echo_json_post.php")
 
         val model = TestModel()
         model.id = UURandom.uuid()
@@ -33,13 +32,16 @@ class MainActivity : AppCompatActivity()
         model.xp = UURandom.uShort().toInt()
 
         val body = UUJsonBody(model)
-        val request = UUTypedHttpRequest<TestModel, UUEmptyResponse>(url, method = UUHttpMethod.POST, body = body)
-        request.responseParser = UUTypedJsonDataParser(TestModel::class.java)
+        val request = UUTypedHttpRequest<TestModel, UUEmptyResponse>(uri, method = UUHttpMethod.POST, body = body)
+        request.responseParser =
+            { data, _, _ ->
+                UUJson.fromBytes(data, TestModel::class.java)
+            }
 
         //val latch = CountDownLatch(1)
 
         var response: UUTypedHttpResponse<TestModel, UUEmptyResponse>? = null
-        val session = UUDefaultTypedHttpSession()
+        val session = UUDefaultTypedHttpSession<UUEmptyResponse>()
         session.executeRequest(request)
         {
             response = it

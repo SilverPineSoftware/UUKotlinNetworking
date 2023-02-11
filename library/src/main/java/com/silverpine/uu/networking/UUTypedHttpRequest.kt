@@ -15,7 +15,7 @@ open class UUTypedHttpRequest<SuccessType, ErrorType>(
     val timeout: Int = DEFAULT_TIMEOUT,
     val useGZipCompression: Boolean = true,
     val proxy: Proxy? = null,
-    //var authorizationProvider: UUTypedHttpAuthorizationProvider? = null,
+    //var authorizationProvider: UUHttpAuthorizationProvider? = null,
     var responseParser: UUByteArrayParser<SuccessType>? = null,
     var errorParser: UUErrorParser<ErrorType>? = null,
     var exceptionParser: UUExceptionParser<ErrorType>? = null)

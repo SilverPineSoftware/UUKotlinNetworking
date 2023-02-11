@@ -2,5 +2,5 @@ package com.silverpine.uu.networking
 
 interface UUHttpAuthorizationProvider
 {
-    fun attachAuthorization(request: UUHttpRequest)
+    fun attachAuthorization(headers: UUHttpHeaders)
 }

@@ -2,7 +2,9 @@ package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUThread
 
-abstract class UUTypedRemoteApi<ErrorType>(var session: UUTypedHttpSession<ErrorType>)
+abstract class UUTypedRemoteApi<ErrorType>(
+    var session: UUTypedHttpSession<ErrorType>,
+    var authorizationProvider: UUHttpAuthorizationProvider? = null)
 {
     private var isAuthorizingFlag: Boolean = false
     private var authorizeListeners: ArrayList<(ErrorType?)->Unit> = arrayListOf()
@@ -60,6 +62,7 @@ abstract class UUTypedRemoteApi<ErrorType>(var session: UUTypedHttpSession<Error
      */
     fun <ResponseType> executeOneRequest(request: UUTypedHttpRequest<ResponseType, ErrorType>, completion: (UUTypedHttpResponse<ResponseType, ErrorType>)->Unit)
     {
+        authorizationProvider?.attachAuthorization(request.headers)
         session.executeRequest(request, completion)
     }
 
