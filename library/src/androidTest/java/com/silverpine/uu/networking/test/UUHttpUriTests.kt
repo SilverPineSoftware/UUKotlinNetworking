@@ -1,8 +1,7 @@
 package com.silverpine.uu.networking.test
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.silverpine.uu.networking.UUHttpRequest
-import com.silverpine.uu.networking.UUQueryStringArgs
+import com.silverpine.uu.networking.UUHttpUri
 import org.junit.Assert
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -11,7 +10,7 @@ import org.junit.runners.MethodSorters
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class UUHttpRequestTests
+class UUHttpUriTests
 {
     companion object
     {
@@ -21,16 +20,16 @@ class UUHttpRequestTests
     @Test
     fun test_0000_formatUrl_empty()
     {
-        val input = UUHttpRequest()
-        val actual = input.buildUrl()?.toString()
+        val input = UUHttpUri("")
+        val actual = input.toURL()?.toString()
         Assert.assertNull(actual)
     }
 
     @Test
     fun test_0001_formatUrl_noQuery_noPath()
     {
-        val input = UUHttpRequest(ROOT_URL)
-        val actual = input.buildUrl()?.toString()
+        val input = UUHttpUri(ROOT_URL)
+        val actual = input.toURL()?.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals(ROOT_URL, actual)
     }
@@ -38,10 +37,10 @@ class UUHttpRequestTests
     @Test
     fun test_0002_formatUrl_singleQuery_noPath()
     {
-        val input = UUHttpRequest(ROOT_URL)
+        val input = UUHttpUri(ROOT_URL)
         input.query["foo"] = "bar"
 
-        val actual = input.buildUrl()?.toString()
+        val actual = input.toURL()?.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL?foo=bar", actual)
     }
@@ -49,11 +48,11 @@ class UUHttpRequestTests
     @Test
     fun test_0003_formatUrl_doubleQuery_noPath()
     {
-        val input = UUHttpRequest(ROOT_URL)
+        val input = UUHttpUri(ROOT_URL)
         input.query["foo"] = "bar"
         input.query["two"] = "three"
 
-        val actual = input.buildUrl()?.toString()
+        val actual = input.toURL()?.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL?foo=bar&two=three", actual)
     }
@@ -61,10 +60,10 @@ class UUHttpRequestTests
     @Test
     fun test_0004_formatUrl_noQuery_singlePath()
     {
-        val input = UUHttpRequest(ROOT_URL)
+        val input = UUHttpUri(ROOT_URL)
         input.path.add("one")
 
-        val actual = input.buildUrl()?.toString()
+        val actual = input.toURL()?.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL/one", actual)
     }
@@ -72,11 +71,11 @@ class UUHttpRequestTests
     @Test
     fun test_0005_formatUrl_noQuery_doublePath()
     {
-        val input = UUHttpRequest(ROOT_URL)
+        val input = UUHttpUri(ROOT_URL)
         input.path.add("one")
         input.path.add("two")
 
-        val actual = input.buildUrl()?.toString()
+        val actual = input.toURL()?.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL/one/two", actual)
     }
@@ -84,11 +83,11 @@ class UUHttpRequestTests
     @Test
     fun test_0006_formatUrl_singleQuery_singlePath()
     {
-        val input = UUHttpRequest(ROOT_URL)
+        val input = UUHttpUri(ROOT_URL)
         input.query["foo"] = "bar"
         input.path.add("one")
 
-        val actual = input.buildUrl()?.toString()
+        val actual = input.toURL()?.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL/one?foo=bar", actual)
     }
@@ -96,13 +95,13 @@ class UUHttpRequestTests
     @Test
     fun test_0006_formatUrl_doubleQuery_doublePath()
     {
-        val input = UUHttpRequest(ROOT_URL)
+        val input = UUHttpUri(ROOT_URL)
         input.query["foo"] = "bar"
         input.query["baz"] = "what"
         input.path.add("one")
         input.path.add("two")
 
-        val actual = input.buildUrl()?.toString()
+        val actual = input.toURL()?.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL/one/two?foo=bar&baz=what", actual)
     }

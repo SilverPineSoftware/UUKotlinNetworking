@@ -2,23 +2,20 @@ package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUDate
 import java.net.Proxy
-import java.net.URL
 
 typealias UUByteArrayParser<T> = ((ByteArray,String,String)->T?)
 typealias UUErrorParser<T> = ((ByteArray,String,String,Int)->T?)
 typealias UUExceptionParser<T> = ((Exception)->T?)
 
 open class UUTypedHttpRequest<SuccessType, ErrorType>(
-    val url: String = "",
+    val uri: UUHttpUri,
     val method: UUHttpMethod = UUHttpMethod.GET,
     val headers: UUHttpHeaders = UUHttpHeaders(),
-    val query: UUQueryStringArgs = UUQueryStringArgs(),
-    val path: UUPathArgs = UUPathArgs(),
     val body: UUHttpBody? = null,
     val timeout: Int = DEFAULT_TIMEOUT,
     val useGZipCompression: Boolean = true,
     val proxy: Proxy? = null,
-    var authorizationProvider: UUTypedHttpAuthorizationProvider? = null,
+    //var authorizationProvider: UUTypedHttpAuthorizationProvider? = null,
     var responseParser: UUByteArrayParser<SuccessType>? = null,
     var errorParser: UUErrorParser<ErrorType>? = null,
     var exceptionParser: UUExceptionParser<ErrorType>? = null)
@@ -34,22 +31,22 @@ open class UUTypedHttpRequest<SuccessType, ErrorType>(
 
     var startTime: Long = 0
 
-    fun buildUrl(): URL?
-    {
-        val url: URL?
-
-        try
-        {
-            url = URL(formatUrl())
-            authorizationProvider?.attachAuthorization(this)
-        }
-        catch (ex: Exception)
-        {
-            return null
-        }
-
-        return url
-    }
+//    fun buildUrl(): URL?
+//    {
+//        val url: URL?
+//
+//        try
+//        {
+//            url = URL(formatUrl())
+//            authorizationProvider?.attachAuthorization(this)
+//        }
+//        catch (ex: Exception)
+//        {
+//            return null
+//        }
+//
+//        return url
+//    }
 
     fun serializeBody(): ByteArray?
     {
@@ -79,14 +76,14 @@ open class UUTypedHttpRequest<SuccessType, ErrorType>(
         return null
     }
 
-    private fun formatUrl(): String
-    {
-        val sb = StringBuilder()
-        sb.append(url)
-        sb.append(path.toString())
-        sb.append(query.toString())
-        return sb.toString()
-    }
+//    private fun formatUrl(): String
+//    {
+//        val sb = StringBuilder()
+//        sb.append(url)
+//        sb.append(path.toString())
+//        sb.append(query.toString())
+//        return sb.toString()
+//    }
 }
 
 

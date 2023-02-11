@@ -2,14 +2,11 @@ package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUDate
 import java.net.Proxy
-import java.net.URL
 
 open class UUHttpRequest(
-    val url: String = "",
+    val uri: UUHttpUri,
     val method: UUHttpMethod = UUHttpMethod.GET,
     val headers: UUHttpHeaders = UUHttpHeaders(),
-    val query: UUQueryStringArgs = UUQueryStringArgs(),
-    val path: UUPathArgs = UUPathArgs(),
     val body: UUHttpBody? = null,
     val timeout: Int = DEFAULT_TIMEOUT,
     val useGZipCompression: Boolean = true,
@@ -29,22 +26,22 @@ open class UUHttpRequest(
 
     var startTime: Long = 0
 
-    fun buildUrl(): URL?
-    {
-        val url: URL?
-
-        try
-        {
-            url = URL(formatUrl())
-            authorizationProvider?.attachAuthorization(this)
-        }
-        catch (ex: Exception)
-        {
-            return null
-        }
-
-        return url
-    }
+//    fun buildUrl(): URL?
+//    {
+//        val url: URL?
+//
+//        try
+//        {
+//            url = URL(formatUrl())
+//            authorizationProvider?.attachAuthorization(this)
+//        }
+//        catch (ex: Exception)
+//        {
+//            return null
+//        }
+//
+//        return url
+//    }
 
     fun serializeBody(): ByteArray?
     {
@@ -74,12 +71,12 @@ open class UUHttpRequest(
         return null
     }
 
-    private fun formatUrl(): String
-    {
-        val sb = StringBuilder()
-        sb.append(url)
-        sb.append(path.toString())
-        sb.append(query.toString())
-        return sb.toString()
-    }
+//    private fun formatUrl(): String
+//    {
+//        val sb = StringBuilder()
+//        sb.append(url)
+//        sb.append(path.toString())
+//        sb.append(query.toString())
+//        return sb.toString()
+//    }
 }

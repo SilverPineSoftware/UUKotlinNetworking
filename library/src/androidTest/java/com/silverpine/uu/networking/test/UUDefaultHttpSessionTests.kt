@@ -47,8 +47,8 @@ class UUDefaultHttpSessionTests
     @Test
     fun test_0000_simple_get()
     {
-        val url = "https://spsw.io/uu/echo_json.php"
-        val request = UUHttpRequest(url)
+        val uri = UUHttpUri("https://spsw.io/uu/echo_json.php")
+        val request = UUHttpRequest(uri)
 
         val latch = CountDownLatch(1)
 
@@ -68,7 +68,7 @@ class UUDefaultHttpSessionTests
     @Test
     fun test_0001_simple_echo_post()
     {
-        val url = "https://spsw.io/uu/echo_json_post.php"
+        val uri = UUHttpUri("https://spsw.io/uu/echo_json_post.php")
 
         val model = TestModel()
         model.id = UURandom.uuid()
@@ -77,7 +77,7 @@ class UUDefaultHttpSessionTests
         model.xp = UURandom.uShort().toInt()
 
         val body = UUJsonBody(model)
-        val request = UUHttpRequest(url, method = UUHttpMethod.POST, body = body)
+        val request = UUHttpRequest(uri, method = UUHttpMethod.POST, body = body)
         request.responseParser = UUJsonDataParser(TestModel::class.java)
 
         val latch = CountDownLatch(1)

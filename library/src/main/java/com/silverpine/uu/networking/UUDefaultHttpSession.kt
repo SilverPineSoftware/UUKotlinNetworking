@@ -126,7 +126,7 @@ open class UUDefaultHttpSession: UUHttpSession
 
     private fun UUHttpRequest.uuOpenConnection(): HttpURLConnection?
     {
-        val url = buildUrl() ?: return null
+        val url = uri.toURL() ?: return null
 
         val urlConnection = if (proxy != null)
         {

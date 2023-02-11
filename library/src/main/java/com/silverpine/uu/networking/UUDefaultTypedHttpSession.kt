@@ -115,7 +115,7 @@ open class UUDefaultTypedHttpSession<ErrorType>: UUTypedHttpSession<ErrorType>
 
     private fun UUTypedHttpRequest<*, *>.uuOpenConnection(): HttpURLConnection?
     {
-        val url = buildUrl() ?: return null
+        val url = uri.toURL() ?: return null
 
         val urlConnection = if (proxy != null)
         {
