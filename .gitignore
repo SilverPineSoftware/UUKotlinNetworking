@@ -84,3 +84,4 @@ lint/outputs/
 lint/tmp/
 # lint/reports/
 /.idea/androidTestResultsUserPreferences.xml
+/.idea/deploymentTargetDropDown.xml

@@ -1,6 +1,10 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-android'
+    id 'kotlin-parcelize'
+    id 'kotlin-kapt'
+    id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
 android {
@@ -37,6 +41,10 @@ dependencies {
     implementation project(':library')
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    implementation "com.squareup.moshi:moshi:${moshi_version}"
+    implementation "com.squareup.moshi:moshi-adapters:${moshi_version}"
+    kapt("com.squareup.moshi:moshi-kotlin-codegen:${moshi_version}")
 
     testImplementation 'junit:junit:4.13.2'
 
