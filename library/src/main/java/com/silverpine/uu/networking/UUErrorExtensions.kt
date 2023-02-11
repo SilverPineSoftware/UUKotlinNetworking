@@ -8,7 +8,7 @@ class UUErrorExtensions
 
 fun UUError.uuHttpErrorCode(): UUHttpErrorCode?
 {
-    if (domain == UUHttp.ERROR_DOMAIN)
+    if (domain == "UUHttp.ERROR_DOMAIN")
     {
         return UUHttpErrorCode.fromInt(code)
     }

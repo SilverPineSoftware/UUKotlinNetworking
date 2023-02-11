@@ -50,7 +50,7 @@ class UUDefaultTypedHttpSessionTests
         val latch = CountDownLatch(1)
 
         var response: UUTypedHttpResponse<UUEmptyResponse, UUEmptyResponse>? = null
-        val session = UUDefaultTypedHttpSession()
+        val session = UUDefaultTypedHttpSession<UUEmptyResponse>()
         session.executeRequest(request)
         {
             response = it
@@ -75,12 +75,16 @@ class UUDefaultTypedHttpSessionTests
 
         val body = UUJsonBody(model)
         val request = UUTypedHttpRequest<TestModel, UUEmptyResponse>(url, method = UUHttpMethod.POST, body = body)
-        request.responseParser = UUTypedJsonDataParser(TestModel::class.java)
+        //request.responseParser = UUTypedJsonDataParser(TestModel::class.java)
+        request.responseParser =
+        { bytes, contentType, contentEncoding ->
+            UUJson.fromBytes(bytes, TestModel::class.java)
+        }
 
         val latch = CountDownLatch(1)
 
         var response: UUTypedHttpResponse<TestModel, UUEmptyResponse>? = null
-        val session = UUDefaultTypedHttpSession()
+        val session = UUDefaultTypedHttpSession<UUEmptyResponse>()
         session.executeRequest(request)
         {
             response = it
@@ -90,8 +94,8 @@ class UUDefaultTypedHttpSessionTests
         latch.await()
 
         Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.parsedResponse)
-        Assert.assertTrue(response?.parsedResponse is TestModel)
+        Assert.assertNotNull(response?.success)
+        Assert.assertTrue(response?.success is TestModel)
     }
 
     //https://spsw.io/uu

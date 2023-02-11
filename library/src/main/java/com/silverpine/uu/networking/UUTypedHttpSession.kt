@@ -1,7 +1,7 @@
 package com.silverpine.uu.networking
 
-interface UUTypedHttpSession
+interface UUTypedHttpSession<ErrorType>
 {
-    fun <ResponseType, ErrorType> executeRequest(request: UUTypedHttpRequest<ResponseType, ErrorType>, completion: (UUTypedHttpResponse<ResponseType, ErrorType>) -> Unit)
+    fun <ResponseType> executeRequest(request: UUTypedHttpRequest<ResponseType, ErrorType>, completion: (UUTypedHttpResponse<ResponseType, ErrorType>) -> Unit)
     fun cancelAll()
 }

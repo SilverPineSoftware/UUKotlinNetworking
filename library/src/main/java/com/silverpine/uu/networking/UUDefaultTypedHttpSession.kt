@@ -1,7 +1,5 @@
 package com.silverpine.uu.networking
 
-import android.os.Parcelable
-import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.uuUtf8
 import com.silverpine.uu.logging.UULog
 import kotlinx.coroutines.CoroutineScope
@@ -10,9 +8,9 @@ import kotlinx.coroutines.launch
 import java.io.*
 import java.net.HttpURLConnection
 
-open class UUDefaultTypedHttpSession: UUTypedHttpSession
+open class UUDefaultTypedHttpSession<ErrorType>: UUTypedHttpSession<ErrorType>
 {
-    override fun <ResponseType, ErrorType> executeRequest(request: UUTypedHttpRequest<ResponseType, ErrorType>, completion: (UUTypedHttpResponse<ResponseType, ErrorType>) -> Unit)
+    override fun <ResponseType> executeRequest(request: UUTypedHttpRequest<ResponseType, ErrorType>, completion: (UUTypedHttpResponse<ResponseType, ErrorType>) -> Unit)
     {
         CoroutineScope(Dispatchers.IO).launch()
         {
@@ -25,7 +23,7 @@ open class UUDefaultTypedHttpSession: UUTypedHttpSession
     {
     }
 
-    private fun <ResponseType, ErrorType> executeRequestSync(request: UUTypedHttpRequest<ResponseType, ErrorType>): UUTypedHttpResponse<ResponseType, ErrorType>
+    private fun <ResponseType> executeRequestSync(request: UUTypedHttpRequest<ResponseType, ErrorType>): UUTypedHttpResponse<ResponseType, ErrorType>
     {
         val response = UUTypedHttpResponse(request)
 
@@ -36,7 +34,7 @@ open class UUDefaultTypedHttpSession: UUTypedHttpSession
             urlConnection = request.uuOpenConnection()
             if (urlConnection == null)
             {
-                response.error = UUError(-2, UUHttp.ERROR_DOMAIN)
+                response.error = null //UUError(-2, "UUHttp.ERROR_DOMAIN")
                 return response
             }
 
@@ -83,27 +81,18 @@ open class UUDefaultTypedHttpSession: UUTypedHttpSession
 
             response.headers.log("executeRequest", "ResponseHeader")
 
-            response.rawResponse = urlConnection.uuReadResponse()
-            response.rawResponse?.let()
+            val rawResponse = urlConnection.uuReadResponse()
+            rawResponse?.let()
             {
                 UULog.d(javaClass, "executeRequest", "ResponseBody: ${String(it)}")
 
                 if (response.httpCode.uuIsHttpSuccess())
                 {
-                    response.parsedResponse = request.responseParser?.parse(it)
+                    response.success = request.responseParser?.invoke(it, response.contentType, response.contentEncoding)
                 }
                 else
                 {
-                    val parsedError = request.errorParser?.parse(it)
-                    var responseCode = UUHttpErrorCode.httpError
-
-                    if (response.httpCode == 401)
-                    {
-                        responseCode = UUHttpErrorCode.authorizationNeeded
-                    }
-
-                    response.error = UUError(responseCode.value, UUHttp.ERROR_DOMAIN, userInfo = parsedError as? Parcelable)
-
+                    response.error = request.errorParser?.invoke(it, response.contentType, response.contentEncoding, response.httpCode)
                 }
 
             } ?: run()
@@ -114,7 +103,7 @@ open class UUDefaultTypedHttpSession: UUTypedHttpSession
         catch (ex: Exception)
         {
             UULog.d(javaClass, "executeRequest", "", ex)
-            response.exception = ex
+            response.error = request.exceptionParser?.invoke(ex)
         }
         finally
         {

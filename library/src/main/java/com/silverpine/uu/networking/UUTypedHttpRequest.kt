@@ -4,7 +4,11 @@ import com.silverpine.uu.core.UUDate
 import java.net.Proxy
 import java.net.URL
 
-open class UUTypedHttpRequest<ResponseType, ErrorType>(
+typealias UUByteArrayParser<T> = ((ByteArray,String,String)->T?)
+typealias UUErrorParser<T> = ((ByteArray,String,String,Int)->T?)
+typealias UUExceptionParser<T> = ((Exception)->T?)
+
+open class UUTypedHttpRequest<SuccessType, ErrorType>(
     val url: String = "",
     val method: UUHttpMethod = UUHttpMethod.GET,
     val headers: UUHttpHeaders = UUHttpHeaders(),
@@ -15,8 +19,9 @@ open class UUTypedHttpRequest<ResponseType, ErrorType>(
     val useGZipCompression: Boolean = true,
     val proxy: Proxy? = null,
     var authorizationProvider: UUTypedHttpAuthorizationProvider? = null,
-    var responseParser: UUTypedHttpDataParser<ResponseType>? = null,
-    var errorParser: UUTypedHttpDataParser<ErrorType>? = null)
+    var responseParser: UUByteArrayParser<SuccessType>? = null,
+    var errorParser: UUErrorParser<ErrorType>? = null,
+    var exceptionParser: UUExceptionParser<ErrorType>? = null)
 {
     companion object
     {

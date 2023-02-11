@@ -1,6 +1,6 @@
 package com.silverpine.uu.networking
 
-interface UUTypedHttpDataParser<ResponseType>
-{
-    fun parse(data: ByteArray): ResponseType?
-}
+//interface UUTypedHttpDataParser<ResponseType>
+//{
+//    fun parse(data: ByteArray): ResponseType?
+//}

@@ -94,7 +94,7 @@ open class UURemoteApi(var session: UUHttpSession)
     open fun shouldRenewApiAuthorization(error: UUError): Boolean
     {
         val errorCode = error.uuHttpErrorCode() ?: return false
-        return (errorCode == UUHttpErrorCode.authorizationNeeded)
+        return (errorCode == UUHttpErrorCode.AUTHORIZATION_NEEDED)
     }
 
     open fun cancelAll()

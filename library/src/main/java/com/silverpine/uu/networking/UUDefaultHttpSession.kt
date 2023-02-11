@@ -36,7 +36,7 @@ open class UUDefaultHttpSession: UUHttpSession
             urlConnection = request.uuOpenConnection()
             if (urlConnection == null)
             {
-                response.error = UUError(-2, UUHttp.ERROR_DOMAIN)
+                response.error = UUError(-2, "UUHttp.ERROR_DOMAIN")
                 return response
             }
 
@@ -95,14 +95,14 @@ open class UUDefaultHttpSession: UUHttpSession
                 else
                 {
                     val parsedError = request.responseParser?.parse(it)
-                    var responseCode = UUHttpErrorCode.httpError
+                    var responseCode = UUHttpErrorCode.HTTP_ERROR
 
                     if (response.httpCode == 401)
                     {
-                        responseCode = UUHttpErrorCode.authorizationNeeded
+                        responseCode = UUHttpErrorCode.AUTHORIZATION_NEEDED
                     }
 
-                    response.error = UUError(responseCode.value, UUHttp.ERROR_DOMAIN, userInfo = parsedError as? Parcelable)
+                    response.error = UUError(responseCode.value, "UUHttp.ERROR_DOMAIN", userInfo = parsedError as? Parcelable)
 
                 }
 
