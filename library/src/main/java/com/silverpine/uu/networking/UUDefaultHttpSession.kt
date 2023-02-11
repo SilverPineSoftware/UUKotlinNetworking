@@ -95,7 +95,15 @@ open class UUDefaultHttpSession: UUHttpSession
                 else
                 {
                     val parsedError = request.responseParser?.parse(it)
-                    response.error = UUError(UUHttpErrorCode.httpError.value, UUHttp.ERROR_DOMAIN, userInfo = parsedError as? Parcelable)
+                    var responseCode = UUHttpErrorCode.httpError
+
+                    if (response.httpCode == 401)
+                    {
+                        responseCode = UUHttpErrorCode.authorizationNeeded
+                    }
+                    
+                    response.error = UUError(responseCode.value, UUHttp.ERROR_DOMAIN, userInfo = parsedError as? Parcelable)
+
                 }
 
             } ?: run()
