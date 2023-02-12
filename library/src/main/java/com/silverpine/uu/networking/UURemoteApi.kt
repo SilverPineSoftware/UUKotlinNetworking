@@ -3,12 +3,14 @@ package com.silverpine.uu.networking
 import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUThread
 
-open class UURemoteApi(var session: UUHttpSession)
+open class UURemoteApi<ErrorType>(
+    var session: UUHttpSession<ErrorType>,
+    var authorizationProvider: UUHttpAuthorizationProvider? = null)
 {
     private var isAuthorizingFlag: Boolean = false
     private var authorizeListeners: ArrayList<(UUError?)->Unit> = arrayListOf()
 
-    fun executeRequest(request: UUHttpRequest, completion: (UUHttpResponse)->Unit)
+    fun <ResponseType> executeRequest(request: UUHttpRequest<ResponseType, ErrorType>, completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
         renewApiAuthorizationIfNeeded()
         { authorizationRenewalError ->
@@ -59,8 +61,9 @@ open class UURemoteApi(var session: UUHttpSession)
     /**
     Executes a single request with no api authorization checks
      */
-    fun executeOneRequest(request: UUHttpRequest, completion: (UUHttpResponse)->Unit)
+    fun <ResponseType> executeOneRequest(request: UUHttpRequest<ResponseType, ErrorType>, completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
+        authorizationProvider?.attachAuthorization(request.headers)
         session.executeRequest(request, completion)
     }
 

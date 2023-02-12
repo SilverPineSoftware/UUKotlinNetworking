@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity()
         model.xp = UURandom.uShort().toInt()
 
         val body = UUJsonBody(model)
-        val request = UUTypedHttpRequest<TestModel, UUEmptyResponse>(uri, method = UUHttpMethod.POST, body = body)
+        val request = UUHttpRequest<TestModel, UUEmptyResponse>(uri, method = UUHttpMethod.POST, body = body)
         request.responseParser =
             { data, _, _ ->
                 UUJson.fromBytes(data, TestModel::class.java)
@@ -40,8 +40,8 @@ class MainActivity : AppCompatActivity()
 
         //val latch = CountDownLatch(1)
 
-        var response: UUTypedHttpResponse<TestModel, UUEmptyResponse>? = null
-        val session = UUDefaultTypedHttpSession<UUEmptyResponse>()
+        var response: UUHttpResponse<TestModel, UUEmptyResponse>? = null
+        val session = UUHttpSession<UUEmptyResponse>()
         session.executeRequest(request)
         {
             response = it

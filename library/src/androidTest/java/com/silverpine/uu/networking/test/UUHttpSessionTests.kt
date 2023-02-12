@@ -19,7 +19,7 @@ import java.util.concurrent.CountDownLatch
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class UUDefaultTypedHttpSessionTests
+class UUHttpSessionTests
 {
     init
     {
@@ -29,8 +29,6 @@ class UUDefaultTypedHttpSessionTests
 
         UUJson.init(moshi)
     }
-
-
 
     @After
     fun doAfter()
@@ -45,12 +43,12 @@ class UUDefaultTypedHttpSessionTests
     fun test_0000_simple_get()
     {
         val uri = UUHttpUri("https://spsw.io/uu/echo_json.php")
-        val request = UUTypedHttpRequest<UUEmptyResponse, UUEmptyResponse>(uri)
+        val request = UUHttpRequest<UUEmptyResponse, UUEmptyResponse>(uri)
 
         val latch = CountDownLatch(1)
 
-        var response: UUTypedHttpResponse<UUEmptyResponse, UUEmptyResponse>? = null
-        val session = UUDefaultTypedHttpSession<UUEmptyResponse>()
+        var response: UUHttpResponse<UUEmptyResponse, UUEmptyResponse>? = null
+        val session = UUHttpSession<UUEmptyResponse>()
         session.executeRequest(request)
         {
             response = it
@@ -74,7 +72,7 @@ class UUDefaultTypedHttpSessionTests
         model.xp = UURandom.uShort().toInt()
 
         val body = UUJsonBody(model)
-        val request = UUTypedHttpRequest<TestModel, UUEmptyResponse>(uri, method = UUHttpMethod.POST, body = body)
+        val request = UUHttpRequest<TestModel, UUEmptyResponse>(uri, method = UUHttpMethod.POST, body = body)
         //request.responseParser = UUTypedJsonDataParser(TestModel::class.java)
         request.responseParser =
         { bytes, contentType, contentEncoding ->
@@ -83,8 +81,8 @@ class UUDefaultTypedHttpSessionTests
 
         val latch = CountDownLatch(1)
 
-        var response: UUTypedHttpResponse<TestModel, UUEmptyResponse>? = null
-        val session = UUDefaultTypedHttpSession<UUEmptyResponse>()
+        var response: UUHttpResponse<TestModel, UUEmptyResponse>? = null
+        val session = UUHttpSession<UUEmptyResponse>()
         session.executeRequest(request)
         {
             response = it
