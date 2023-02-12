@@ -40,12 +40,30 @@ enum class UUHttpErrorCode(val value: Int)
     // UU failed to parse a response.  See underlying error for more details
     PARSE_FAILURE(1007),
 
+    /**
+     * An exception was caught when serializing the request body.  Check the exception
+     * property of UUError for additional details.
+     */
+    SERIALIZE_FAILURE(1008),
+
+    /**
+     * An exception was caught when sending data to a remote endpoint. Check the exception
+     * property of UUError for additional details.
+     */
+    WRITE_FAILED(1009),
+
+    /**
+     * An exception was caught when reading data from a remote endpoint. Check the exception
+     * property of UUError for additional details.
+     */
+    READ_FAILED(1010),
+
     // Error code returned when server authorization is needed.  By default this happens on a 401 error, but
     //applications can emit this error from custom parsers to trigger authorization renewal for other error conditions.
-    AUTHORIZATION_NEEDED(1008),
+    AUTHORIZATION_NEEDED(1011),
 
     // Error code returned when an unknown error occurs.  This is typically a developer error. Contact the Api developers.
-    UNHANDLED_EXCEPTION(1009),
+    UNHANDLED_EXCEPTION(1012),
 
     // Error code returned when an unknown error occurs.  This is typically a developer error. Contact the Api developers.
     UNDEFINED(1999);

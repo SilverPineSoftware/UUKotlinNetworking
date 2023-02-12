@@ -4,8 +4,12 @@ interface UUTokenAuthorizationProvider: UUHttpAuthorizationProvider
 {
     override fun attachAuthorization(headers: UUHttpHeaders)
     {
-        token?.let { headers.putSingle("Authorization", "Bearer $it") }
+        val t = token ?: return
+        if (t.isNotEmpty())
+        {
+            headers.putSingle("Authorization", "Bearer $t")
+        }
     }
 
-    var token: String?
+    val token: String?
 }

@@ -1,13 +1,14 @@
 package com.silverpine.uu.networking
 
+import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUThread
 
-abstract class UUTypedRemoteApi<ErrorType>(
+open class UUTypedRemoteApi<ErrorType>(
     var session: UUTypedHttpSession<ErrorType>,
     var authorizationProvider: UUHttpAuthorizationProvider? = null)
 {
     private var isAuthorizingFlag: Boolean = false
-    private var authorizeListeners: ArrayList<(ErrorType?)->Unit> = arrayListOf()
+    private var authorizeListeners: ArrayList<(UUError?)->Unit> = arrayListOf()
 
     fun <ResponseType> executeRequest(request: UUTypedHttpRequest<ResponseType, ErrorType>, completion: (UUTypedHttpResponse<ResponseType, ErrorType>)->Unit)
     {
@@ -73,7 +74,7 @@ abstract class UUTypedRemoteApi<ErrorType>(
 
     Default behavior is to just return nil
      */
-    open fun renewApiAuthorization(completion: (ErrorType?)->Unit)
+    open fun renewApiAuthorization(completion: (UUError?)->Unit)
     {
         completion(null)
     }
@@ -93,11 +94,11 @@ abstract class UUTypedRemoteApi<ErrorType>(
 
     Default behavior is to return  true if the UUHttpSessionError is authorizationNeeded.
      */
-    abstract fun shouldRenewApiAuthorization(error: ErrorType): Boolean
-//    {
-//        val errorCode = error.uuHttpErrorCode() ?: return false
-//        return (errorCode == UUHttpErrorCode.authorizationNeeded)
-//    }
+    open fun shouldRenewApiAuthorization(error: UUError): Boolean
+    {
+        val errorCode = error.uuHttpErrorCode() ?: return false
+        return (errorCode == UUHttpErrorCode.AUTHORIZATION_NEEDED)
+    }
 
     open fun cancelAll()
     {
@@ -106,7 +107,7 @@ abstract class UUTypedRemoteApi<ErrorType>(
 
     // MARK: Private Implementation
 
-    private fun renewApiAuthorizationIfNeeded(completion: (ErrorType?)->Unit)
+    private fun renewApiAuthorizationIfNeeded(completion: (UUError?)->Unit)
     {
         isApiAuthorizationNeeded()
         { authorizationNeeded ->
@@ -122,7 +123,7 @@ abstract class UUTypedRemoteApi<ErrorType>(
         }
     }
 
-    private fun internalRenewApiAuthorization(completion: (ErrorType?)->Unit)
+    private fun internalRenewApiAuthorization(completion: (UUError?)->Unit)
     {
         addAuthorizeListener(completion)
 
@@ -154,15 +155,15 @@ abstract class UUTypedRemoteApi<ErrorType>(
     }
 
     @Synchronized
-    private fun addAuthorizeListener(listener: (ErrorType?)->Unit)
+    private fun addAuthorizeListener(listener: (UUError?)->Unit)
     {
         authorizeListeners.add(listener)
     }
 
     @Synchronized
-    private fun notifyAuthorizeListeners(error: ErrorType?)
+    private fun notifyAuthorizeListeners(error: UUError?)
     {
-        val listenersToNotify: ArrayList<(ErrorType?)->Unit> = arrayListOf()
+        val listenersToNotify: ArrayList<(UUError?)->Unit> = arrayListOf()
         listenersToNotify.addAll(authorizeListeners)
         authorizeListeners.clear()
 

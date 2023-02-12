@@ -1,9 +1,11 @@
 package com.silverpine.uu.networking
 
+import com.silverpine.uu.core.UUError
+
 open class UUTypedHttpResponse<SuccessType, ErrorType>(val request: UUTypedHttpRequest<SuccessType, ErrorType>)
 {
     var success: SuccessType? = null
-    var error: ErrorType? = null
+    var error: UUError? = null
 
     var httpCode: Int = 0
     var contentType: String = ""
