@@ -246,7 +246,9 @@ open class UUHttpSession<ErrorType>
                 bos.write(buffer, 0, bytesRead)
             }
 
-            parseResponse(bos.toByteArray(), response)
+            val responseBytes = bos.toByteArray()
+            UULog.d(javaClass, "executeRequest", "ResponseBody: ${responseBytes.uuUtf8()}")
+            parseResponse(responseBytes, response)
         }
         catch (ex: Exception)
         {
