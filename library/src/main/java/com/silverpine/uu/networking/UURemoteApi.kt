@@ -8,12 +8,12 @@ open class UURemoteApi<ErrorType>(
     var authorizationProvider: UUHttpAuthorizationProvider? = null)
 {
     private var isAuthorizingFlag: Boolean = false
-    private var authorizeListeners: ArrayList<(UUError?)->Unit> = arrayListOf()
+    private var authorizeListeners: ArrayList<(Boolean, UUError?)->Unit> = arrayListOf()
 
     fun <ResponseType> executeRequest(request: UUHttpRequest<ResponseType, ErrorType>, completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
         renewApiAuthorizationIfNeeded()
-        { authorizationRenewalError ->
+        { _, authorizationRenewalError ->
 
             if (authorizationRenewalError != null)
             {
@@ -32,7 +32,7 @@ open class UURemoteApi<ErrorType>(
                     if (shouldRenewApiAuthorization(err))
                     {
                         internalRenewApiAuthorization()
-                        { innerAuthorizationRenewalError ->
+                        { didAttempt, innerAuthorizationRenewalError ->
 
                             innerAuthorizationRenewalError?.let()
                             {
@@ -41,7 +41,14 @@ open class UURemoteApi<ErrorType>(
                                 completion(errorResponse)
                             } ?: run()
                             {
-                                executeOneRequest(request, completion)
+                                if (didAttempt)
+                                {
+                                    executeOneRequest(request, completion)
+                                }
+                                else
+                                {
+                                    completion(response)
+                                }
                             }
                         }
                     }
@@ -74,9 +81,9 @@ open class UURemoteApi<ErrorType>(
 
     Default behavior is to just return nil
      */
-    open fun renewApiAuthorization(completion: (UUError?)->Unit)
+    open fun renewApiAuthorization(completion: (Boolean,UUError?)->Unit)
     {
-        completion(null)
+        completion(false, null)
     }
 
     /**
@@ -107,7 +114,7 @@ open class UURemoteApi<ErrorType>(
 
     // MARK: Private Implementation
 
-    private fun renewApiAuthorizationIfNeeded(completion: (UUError?)->Unit)
+    private fun renewApiAuthorizationIfNeeded(completion: (Boolean, UUError?)->Unit)
     {
         isApiAuthorizationNeeded()
         { authorizationNeeded ->
@@ -118,12 +125,12 @@ open class UURemoteApi<ErrorType>(
             }
             else
             {
-                completion(null)
+                completion(false, null)
             }
         }
     }
 
-    private fun internalRenewApiAuthorization(completion: (UUError?)->Unit)
+    private fun internalRenewApiAuthorization(completion: (Boolean, UUError?)->Unit)
     {
         addAuthorizeListener(completion)
 
@@ -137,8 +144,8 @@ open class UURemoteApi<ErrorType>(
         setAuthorizing(true)
 
         renewApiAuthorization()
-        { error ->
-            notifyAuthorizeListeners(error)
+        { didAttempt, error ->
+            notifyAuthorizeListeners(didAttempt, error)
         }
     }
 
@@ -155,15 +162,15 @@ open class UURemoteApi<ErrorType>(
     }
 
     @Synchronized
-    private fun addAuthorizeListener(listener: (UUError?)->Unit)
+    private fun addAuthorizeListener(listener: (Boolean,UUError?)->Unit)
     {
         authorizeListeners.add(listener)
     }
 
     @Synchronized
-    private fun notifyAuthorizeListeners(error: UUError?)
+    private fun notifyAuthorizeListeners(didAttempt: Boolean, error: UUError?)
     {
-        val listenersToNotify: ArrayList<(UUError?)->Unit> = arrayListOf()
+        val listenersToNotify: ArrayList<(Boolean, UUError?)->Unit> = arrayListOf()
         listenersToNotify.addAll(authorizeListeners)
         authorizeListeners.clear()
 
@@ -176,7 +183,7 @@ open class UURemoteApi<ErrorType>(
 
             UUThread.runOnBackgroundThread()
             {
-                listener(error)
+                listener(didAttempt, error)
             }
         }
     }
