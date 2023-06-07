@@ -1,5 +1,6 @@
 package com.silverpine.uu.networking
 
+import android.os.Bundle
 import android.os.Parcelable
 import com.silverpine.uu.core.UUError
 import java.net.SocketException
@@ -48,7 +49,10 @@ object UUHttpError
             adjustedCode = UUHttpErrorCode.AUTHORIZATION_NEEDED
         }
 
-        return UUError(adjustedCode.value, DOMAIN, userInfo = userInfo)
+        val info = Bundle()
+        info.putParcelable("userInfo", userInfo)
+
+        return UUError(adjustedCode.value, DOMAIN, userInfo = info)
     }
 }
 

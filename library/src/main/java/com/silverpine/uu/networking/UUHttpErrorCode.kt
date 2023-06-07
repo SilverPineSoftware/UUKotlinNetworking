@@ -1,5 +1,6 @@
 package com.silverpine.uu.networking
 
+import android.os.Bundle
 import android.os.Parcelable
 import com.silverpine.uu.core.UUError
 
@@ -90,7 +91,10 @@ enum class UUHttpErrorCode(val value: Int)
             ex: Exception? = null,
             userInfo: Parcelable? = null): UUError
         {
-            return UUError(code.value, DOMAIN, ex, userInfo)
+            val info = Bundle()
+            info.putParcelable("userInfo", userInfo)
+
+            return UUError(code.value, DOMAIN, ex, info)
         }
     }
 }
