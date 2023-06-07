@@ -1,7 +1,7 @@
 buildscript {
     dependencies {
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20'
-        classpath 'org.jetbrains.kotlin:kotlin-serialization:1.8.20'
+        classpath 'org.jetbrains.kotlin:kotlin-serialization:1.8.21'
     }
 }
 
@@ -15,7 +15,7 @@ plugins {
 ext["min_sdk"] = 26
 ext["target_sdk"] = 33
 ext["moshi_version"] = "1.14.0"
-ext["uu_core_version"] = '0.0.6.27-develop-SNAPSHOT'
+ext["uu_core_version"] = '0.0.6.31-develop-SNAPSHOT'
 ext["uu_test_version"] = '0.0.1.4-develop-SNAPSHOT'
 
 apply from: "./publish-common.gradle"
