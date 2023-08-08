@@ -3,7 +3,7 @@ package com.silverpine.uu.networking.test
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UURandom
-import com.silverpine.uu.core.UUThread
+import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.networking.*
 import com.silverpine.uu.test.letters
 import com.squareup.moshi.Moshi
@@ -35,7 +35,7 @@ class UUHttpSessionTests
     {
         // A single shot timer gets cleaned up after the timer block is invoked, so we need
         // to wait.  This is a hacky way to test, but works in this simple case
-        UUThread.safeSleep("doAfter", 100)
+        uuSleep("doAfter", 100)
     }
 
 

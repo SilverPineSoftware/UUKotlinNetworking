@@ -1,7 +1,7 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUError
-import com.silverpine.uu.core.UUThread
+import com.silverpine.uu.core.uuDispatch
 
 open class UURemoteApi<ErrorType>(
     var session: UUHttpSession<ErrorType>,
@@ -181,7 +181,7 @@ open class UURemoteApi<ErrorType>(
         listenersToNotify.forEach()
         { listener ->
 
-            UUThread.background()
+            uuDispatch()
             {
                 listener(didAttempt, error)
             }
