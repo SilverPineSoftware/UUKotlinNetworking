@@ -181,7 +181,7 @@ open class UURemoteApi<ErrorType>(
         listenersToNotify.forEach()
         { listener ->
 
-            UUThread.runOnBackgroundThread()
+            UUThread.background()
             {
                 listener(didAttempt, error)
             }
