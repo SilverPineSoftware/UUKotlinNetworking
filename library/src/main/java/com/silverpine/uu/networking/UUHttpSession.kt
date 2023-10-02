@@ -52,14 +52,6 @@ open class UUHttpSession<ErrorType>
 
             request.startTime = System.currentTimeMillis()
 
-
-//            if (urlConnection is HttpsURLConnection) {
-//                val factory: SSLSocketFactory = request.getSocketFactory()
-//                if (factory != null) {
-//                    urlConnection.sslSocketFactory = factory
-//                }
-//            }
-
             UULog.d(javaClass, "executeRequest", "${request.method} ${urlConnection.url} ")
             UULog.d(javaClass, "executeRequest", "Timeout: ${request.timeout}")
 
