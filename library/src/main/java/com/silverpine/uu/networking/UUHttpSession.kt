@@ -24,6 +24,8 @@ open class UUHttpSession<ErrorType>
         }
     }
 
+    var logResponses: Boolean = false
+
     open fun cancelAll()
     {
     }
@@ -239,7 +241,12 @@ open class UUHttpSession<ErrorType>
             }
 
             val responseBytes = bos.toByteArray()
-            UULog.d(javaClass, "executeRequest", "ResponseBody: ${responseBytes.uuUtf8()}")
+
+            if (logResponses)
+            {
+                UULog.d(javaClass, "executeRequest", "ResponseBody: ${responseBytes.uuUtf8()}")
+            }
+            
             parseResponse(responseBytes, response)
         }
         catch (ex: Exception)
