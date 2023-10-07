@@ -10,7 +10,9 @@ open class UURemoteApi<ErrorType>(
     private var isAuthorizingFlag: Boolean = false
     private var authorizeListeners: ArrayList<(Boolean, UUError?)->Unit> = arrayListOf()
 
-    fun <ResponseType> executeRequest(request: UUHttpRequest<ResponseType, ErrorType>, completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
+    fun <ResponseType> executeAuthorizedRequest(
+        request: UUHttpRequest<ResponseType, ErrorType>,
+        completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
         renewApiAuthorizationIfNeeded()
         { _, authorizationRenewalError ->
@@ -23,7 +25,7 @@ open class UURemoteApi<ErrorType>(
                 return@renewApiAuthorizationIfNeeded
             }
 
-            executeOneRequest(request)
+            executeOneAuthorizedRequest(request)
             { response ->
 
                 response.error?.let()
@@ -43,7 +45,7 @@ open class UURemoteApi<ErrorType>(
                             {
                                 if (didAttempt)
                                 {
-                                    executeOneRequest(request, completion)
+                                    executeOneAuthorizedRequest(request, completion)
                                 }
                                 else
                                 {
@@ -68,9 +70,24 @@ open class UURemoteApi<ErrorType>(
     /**
     Executes a single request with no api authorization checks
      */
-    fun <ResponseType> executeOneRequest(request: UUHttpRequest<ResponseType, ErrorType>, completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
+    fun <ResponseType> executeOneAuthorizedRequest(
+        request: UUHttpRequest<ResponseType, ErrorType>,
+        completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
         authorizationProvider?.attachAuthorization(request.headers)
+        session.executeRequest(request, completion)
+    }
+
+    /**
+     * Executes a single request with no authorization added
+     *
+     * @param request the request
+     * @param completion the callback
+     */
+    fun <ResponseType> executeRequest(
+        request: UUHttpRequest<ResponseType, ErrorType>,
+        completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
+    {
         session.executeRequest(request, completion)
     }
 

@@ -5,6 +5,7 @@ plugins {
     id 'kotlin-parcelize'
     id 'kotlin-kapt'
     id 'org.jetbrains.kotlin.plugin.serialization'
+    id 'com.google.devtools.ksp' version '1.9.10-1.0.13'
 }
 
 android {
@@ -44,7 +45,7 @@ dependencies {
 
     implementation "com.squareup.moshi:moshi:${moshi_version}"
     implementation "com.squareup.moshi:moshi-adapters:${moshi_version}"
-    kapt("com.squareup.moshi:moshi-kotlin-codegen:${moshi_version}")
+    ksp("com.squareup.moshi:moshi-kotlin-codegen:${moshi_version}")
 
     testImplementation 'junit:junit:4.13.2'
 
