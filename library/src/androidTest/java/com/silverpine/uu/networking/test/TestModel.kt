@@ -1,22 +1,14 @@
 package com.silverpine.uu.networking.test
 
 import androidx.annotation.Keep
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 @Keep
-@JsonClass(generateAdapter = true)
+@Serializable
 open class TestModel
 {
-    @Json
     var id: String = ""
-
-    @Json
     var name: String = ""
-
-    @Json
     var level: Int = 0
-
-    @Json
     var xp: Int = 0
 }

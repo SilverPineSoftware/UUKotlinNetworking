@@ -1,13 +1,10 @@
 package com.silverpine.uu.networking.test
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UURandom
 import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.networking.*
 import com.silverpine.uu.test.letters
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
 import org.junit.After
 import org.junit.Assert
 import org.junit.FixMethodOrder
@@ -21,14 +18,14 @@ import java.util.concurrent.CountDownLatch
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class UUHttpSessionTests
 {
-    init
-    {
-        val moshi = Moshi.Builder()
-            .add(Date::class.java, Rfc3339DateJsonAdapter().nullSafe())
-            .build()
-
-        UUJson.init(moshi)
-    }
+//    init
+//    {
+//        val moshi = Moshi.Builder()
+//            .add(Date::class.java, Rfc3339DateJsonAdapter().nullSafe())
+//            .build()
+//
+//        UUJson.init(moshi)
+//    }
 
     @After
     fun doAfter()
@@ -49,6 +46,7 @@ class UUHttpSessionTests
 
         var response: UUHttpResponse<UUEmptyResponse, UUEmptyResponse>? = null
         val session = UUHttpSession<UUEmptyResponse>()
+        session.logResponses = true
         session.executeRequest(request)
         {
             response = it
@@ -73,10 +71,9 @@ class UUHttpSessionTests
 
         val body = UUJsonBody(model)
         val request = UUHttpRequest<TestModel, UUEmptyResponse>(uri, method = UUHttpMethod.POST, body = body)
-        //request.responseParser = UUTypedJsonDataParser(TestModel::class.java)
         request.responseParser =
         { bytes, contentType, contentEncoding ->
-            UUJson.fromBytes(bytes, TestModel::class.java)
+            uuParseJsonResponse(bytes, contentType, contentEncoding)
         }
 
         val latch = CountDownLatch(1)
