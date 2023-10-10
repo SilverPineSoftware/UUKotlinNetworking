@@ -1,18 +1,11 @@
-package com.silverpine.uu.networking
+/*package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.uuToJson
 import com.silverpine.uu.core.uuUtf8ByteArray
 
-abstract class UUHttpBody(val contentType: String, val content: Any)
-{
-    abstract fun serializeBody(): ByteArray?
-}
+open class UUHttpBody(var contentType: String, var content: ByteArray?)
 
-open class UUJsonBody<T : Any>(content: T): UUHttpBody(UUContentType.APPLICATION_JSON, content)
+inline fun <reified T: Any> uuJsonBody(content: T): UUHttpBody
 {
-    override fun serializeBody(): ByteArray?
-    {
-        val json = content.uuToJson()
-        return json?.uuUtf8ByteArray()
-    }
-}
+    return UUHttpBody(UUContentType.APPLICATION_JSON, content.uuToJson()?.uuUtf8ByteArray())
+}*/

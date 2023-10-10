@@ -5,8 +5,8 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.plugin.serialization'
     id 'com.google.devtools.ksp' version '1.9.10-1.0.13'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.0'
     id 'kotlinx-serialization'
 }
 

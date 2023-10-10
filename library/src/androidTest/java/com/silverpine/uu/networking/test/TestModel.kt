@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Keep
 @Serializable
-open class TestModel
+class TestModel
 {
     var id: String = ""
     var name: String = ""

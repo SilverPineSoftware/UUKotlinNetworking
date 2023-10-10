@@ -147,13 +147,13 @@ open class UUHttpSession<ErrorType>
     {
         try
         {
-            val httpBody = request.body ?: return null
-            val requestBody = httpBody.serializeBody() ?: return null
+            val contentType = request.bodyContentType ?: return null
+            val contentPayload = request.body ?: return null
 
-            request.headers.putSingle("Content-Type", httpBody.contentType)
-            request.headers.putSingle("Content-Length", "${requestBody.size}")
+            request.headers.putSingle("Content-Type", contentType)
+            request.headers.putSingle("Content-Length", "${contentPayload.size}")
 
-            return requestBody
+            return contentPayload
         }
         catch (ex: Exception)
         {
