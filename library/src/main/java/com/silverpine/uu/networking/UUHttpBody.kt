@@ -2,55 +2,30 @@ package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.uuToByteArray
-import kotlinx.serialization.SerializationStrategy
 import java.nio.charset.Charset
 
-
-abstract class UUHttpBody<T: Any>(
+open class UUHttpBody(
     var contentType: String,
-    var contentEncoding: String,
-    var content: T?)
+    var contentEncoding: String)
 {
-    var contentLength: Int = 0
+    var content: ByteArray? = null
 
-    protected abstract fun serializeBody(content: T?): ByteArray?
-
-    fun encodeBody(): ByteArray?
+    constructor(contentType: String, contentEncoding: String, content: ByteArray?): this(contentType, contentEncoding)
     {
-        val body = serializeBody(content)
-        contentLength = body?.size ?: 0
-        return body
+        this.content = content
+    }
+
+    open fun encodeBody(): ByteArray?
+    {
+        return content
     }
 }
 
-class UUJsonBody<T: Any>(content: T?, private val serializationStrategy: SerializationStrategy<T>?): UUHttpBody<T>(UUContentType.APPLICATION_JSON, Charsets.UTF_8.toString(), content)
+class UUJsonBody<T: Any>(private val jsonObject: T, private val charset: Charset = Charsets.UTF_8): UUHttpBody(UUContentType.APPLICATION_JSON, charset.name())
 {
-    private var json: String? = null
-
-    constructor(json: String?): this(null, null)
+    override fun encodeBody(): ByteArray?
     {
-        this.json = json
-    }
-    override fun serializeBody(content: T?): ByteArray?
-    {
-        json?.let()
-        {
-            return it.uuToByteArray(Charset.forName(contentEncoding))
-        }
-
-        serializationStrategy?.let()
-        {
-            val json = UUJson.toJson(content, serializationStrategy)
-            return json?.uuToByteArray(Charset.forName(contentEncoding))
-        }
-
-        return null
+        val json = UUJson.toJson(jsonObject, jsonObject.javaClass)
+        return json?.uuToByteArray(charset)
     }
 }
-
-/*
-inline fun <reified T: Any> uuJsonBody(content: T): UUHttpBody
-{
-    return UUHttpBody(UUContentType.APPLICATION_JSON, content.uuToJson()?.uuUtf8ByteArray())
-}
-*/

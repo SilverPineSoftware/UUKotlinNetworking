@@ -2,11 +2,13 @@ package com.silverpine.uu.networking.test
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.silverpine.uu.core.UUJson
+import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.networking.UUHttpError
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.uuIsHttpSuccess
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -34,16 +36,19 @@ class UURemoteApiTests
     @Before
     fun doBefore()
     {
-        UUJson.configure(Json()
+        UUJson.init(UUKotlinXJsonProvider(Json()
         {
             ignoreUnknownKeys = true
-            explicitNulls = false
+            namingStrategy = JsonNamingStrategy.SnakeCase
         })
+        )
     }
+
     @After
     fun doAfter()
     {
-        UUJson.configure(Json.Default)
+        UUJson.init(UUKotlinXJsonProvider(Json.Default))
+
         // A single shot timer gets cleaned up after the timer block is invoked, so we need
         // to wait.  This is a hacky way to test, but works in this simple case
         uuSleep("doAfter", 100)
@@ -88,14 +93,14 @@ class UURemoteApiTests
     }
 
     @Test
-    fun test_0003_getList()
+    fun test_0003_getArray()
     {
         val latch = CountDownLatch(1)
 
-        var response: UUHttpResponse<List<TestApiObject>, TestApiError>? = null
+        var response: UUHttpResponse<Array<TestApiObject>, TestApiError>? = null
 
         val count = 7
-        api.getList(count)
+        api.getArray(count)
         {
             response = it
             latch.countDown()
@@ -103,7 +108,7 @@ class UURemoteApiTests
 
         latch.await()
 
-        assertListReply(200, count, null, response)
+        assertArrayReply(200, count, null, response)
     }
 
     @Test
@@ -131,14 +136,14 @@ class UURemoteApiTests
     {
         val latch = CountDownLatch(1)
 
-        var response: UUHttpResponse<List<TestApiObject>, TestApiError>? = null
+        var response: UUHttpResponse<Array<TestApiObject>, TestApiError>? = null
 
-        val post = listOf(
+        val post = arrayOf(
             TestApiObject("one", "two", "three"),
             TestApiObject("A", "B", "C"),
             TestApiObject("Foo", "Bar", "Baz"))
 
-        api.postList(post)
+        api.postArray(post)
         {
             response = it
             latch.countDown()
@@ -146,7 +151,7 @@ class UURemoteApiTests
 
         latch.await()
 
-        assertListReply(200, post.size, null, response)
+        assertArrayReply(200, post.size, null, response)
     }
 
 
@@ -183,11 +188,11 @@ class UURemoteApiTests
         }
     }
 
-    private fun assertListReply(
+    private fun assertArrayReply(
         expectedHttpCode: Int,
         expectedResponseCount: Int,
         expectedError: TestApiError?,
-        response: UUHttpResponse<List<TestApiObject>, TestApiError>?)
+        response: UUHttpResponse<Array<TestApiObject>, TestApiError>?)
     {
         Assert.assertNotNull(response)
         Assert.assertEquals(expectedHttpCode, response?.httpCode)

@@ -10,9 +10,7 @@ open class UUHttpRequest<SuccessType, ErrorType>(var uri: UUHttpUri)
 {
     var method: UUHttpMethod = UUHttpMethod.GET
     var headers: UUHttpHeaders = UUHttpHeaders()
-    var body: UUHttpBody<*>? = null
-//    var body: ByteArray? = null
-//    var bodyContentType: String? = null
+    var body: UUHttpBody? = null
     val timeout: Int = DEFAULT_TIMEOUT
     val useGZipCompression: Boolean = true
     val proxy: Proxy? = null

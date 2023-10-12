@@ -57,10 +57,21 @@ open class UUHttpSession<ErrorType>
             UULog.d(javaClass, "executeRequest", "${request.method} ${urlConnection.url} ")
             UULog.d(javaClass, "executeRequest", "Timeout: ${request.timeout}")
 
-            val requestBody = serializeBody(request, response)
-            if (response.error != null)
-            {
-                return response
+            var requestBody: ByteArray? = null
+            var requestBodyLength = 0
+
+            request.body?.let()
+            { body ->
+
+                body.encodeBody()?.let()
+                { bodyContent ->
+
+                    request.headers.putSingle("Content-Type", body.contentType)
+                    request.headers.putSingle("Content-Encoding", body.contentEncoding)
+                    request.headers.putSingle("Content-Length", "${bodyContent.size}")
+                    requestBody = bodyContent
+                    requestBodyLength = bodyContent.size
+                }
             }
 
             request.headers.log("executeRequest", "RequestHeaders")
@@ -70,11 +81,11 @@ open class UUHttpSession<ErrorType>
                 urlConnection.setRequestProperty(key, value.joinToString(","))
             }
 
-            if (requestBody != null)
+            requestBody?.let()
             {
                 urlConnection.doOutput = true
-                urlConnection.setFixedLengthStreamingMode(requestBody.size)
-                val writeError = writeRequest(urlConnection, requestBody)
+                urlConnection.setFixedLengthStreamingMode(requestBodyLength)
+                val writeError = writeRequest(urlConnection, it)
                 if (writeError != null)
                 {
                     response.error = writeError
@@ -132,7 +143,6 @@ open class UUHttpSession<ErrorType>
 
         urlConnection?.connectTimeout = request.timeout
         urlConnection?.readTimeout = request.timeout
-        urlConnection?.doInput = true
         urlConnection?.requestMethod = request.method.toString()
 
         if (request.useGZipCompression)
@@ -141,36 +151,6 @@ open class UUHttpSession<ErrorType>
         }
 
         return Pair(urlConnection, null)
-    }
-
-    private fun <SuccessType, ErrorType> serializeBody(request: UUHttpRequest<SuccessType, ErrorType>, response: UUHttpResponse<SuccessType, ErrorType>): ByteArray?
-    {
-        try
-        {
-            val body = request.body ?: return null
-            val serializedBody = body.encodeBody()
-
-            request.headers.putSingle("Content-Type", body.contentType)
-            request.headers.putSingle("Content-Encoding", body.contentEncoding)
-            request.headers.putSingle("Content-Length", "${body.contentLength}")
-
-            return serializedBody
-
-//            val contentType = request.bodyContentType ?: return null
-//            val contentPayload = request.body ?: return null
-//
-//            request.headers.putSingle("Content-Type", contentType)
-//            request.headers.putSingle("Content-Length", "${contentPayload.size}")
-//
-//            return contentPayload
-        }
-        catch (ex: Exception)
-        {
-            UULog.d(javaClass, "serializeBody", "", ex)
-            response.error = UUHttpError.fromException(UUHttpErrorCode.WRITE_FAILED, ex)
-        }
-
-        return null
     }
 
     private fun writeRequest(connection: HttpURLConnection, body: ByteArray): UUError?

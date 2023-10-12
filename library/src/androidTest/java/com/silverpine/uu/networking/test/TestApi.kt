@@ -1,8 +1,7 @@
 package com.silverpine.uu.networking.test
 
 import android.os.Parcelable
-import com.silverpine.uu.core.uuFromJson
-import com.silverpine.uu.core.uuToJson
+import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.logging.UULog
 import com.silverpine.uu.networking.UUHttpMethod
 import com.silverpine.uu.networking.UUHttpRequest
@@ -44,10 +43,10 @@ data class TestApiObject(var id: String, var name: String, var data: String)
 interface ITestApi
 {
     fun getObject(echo: TestApiObject?, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
-    fun getList(count: Int, completion: (UUHttpResponse<List<TestApiObject>, TestApiError>)->Unit)
+    fun getArray(count: Int, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>)->Unit)
 
     fun postObject(obj: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
-    fun postList(list: List<TestApiObject>, completion: (UUHttpResponse<List<TestApiObject>, TestApiError>) -> Unit)
+    fun postArray(array: Array<TestApiObject>, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>) -> Unit)
 
     /*
     fun postObject(request: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
@@ -114,13 +113,13 @@ class TestApi(private val apiUrl: String): UURemoteApi<TestApiError>(UUHttpSessi
         internalExecute(request, completion)
     }
 
-    override fun getList(count: Int, completion: (UUHttpResponse<List<TestApiObject>, TestApiError>) -> Unit)
+    override fun getArray(count: Int, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>) -> Unit)
     {
         val queryArgs = UUQueryStringArgs()
         queryArgs["count"] = "$count"
 
         val uri = UUHttpUri("$apiUrl/multiple", query = queryArgs)
-        val request = UUHttpRequest<List<TestApiObject>, TestApiError>(uri)
+        val request = UUHttpRequest<Array<TestApiObject>, TestApiError>(uri)
         internalExecute(request, completion)
     }
 
@@ -129,16 +128,16 @@ class TestApi(private val apiUrl: String): UURemoteApi<TestApiError>(UUHttpSessi
         val uri = UUHttpUri("$apiUrl/single")
         val request = UUHttpRequest<TestApiObject, TestApiError>(uri)
         request.method = UUHttpMethod.POST
-        request.body = UUJsonBody(obj, TestApiObject.serializer())
+        request.body = UUJsonBody(obj)
         internalExecute(request, completion)
     }
 
-    override fun postList(list: List<TestApiObject>, completion: (UUHttpResponse<List<TestApiObject>, TestApiError>) -> Unit)
+    override fun postArray(array: Array<TestApiObject>, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>) -> Unit)
     {
         val uri = UUHttpUri("$apiUrl/single")
-        val request = UUHttpRequest<List<TestApiObject>, TestApiError>(uri)
+        val request = UUHttpRequest<Array<TestApiObject>, TestApiError>(uri)
         request.method = UUHttpMethod.POST
-        request.body = UUJsonBody<List<TestApiObject>>(list.uuToJson())
+        request.body = UUJsonBody(array)
 
         internalExecute(request, completion)
     }
@@ -158,13 +157,13 @@ class TestApi(private val apiUrl: String): UURemoteApi<TestApiError>(UUHttpSessi
         request.errorParser = this::parseError
     }
 
-    private inline fun <reified ResponseType> parseSuccess(data: ByteArray, contentType: String, contentEncoding: String): ResponseType?
+    private inline fun <reified ResponseType: Any> parseSuccess(data: ByteArray, contentType: String, contentEncoding: String): ResponseType?
     {
-        return data.uuFromJson()
+        return UUJson.fromBytes(data, ResponseType::class.java)
     }
 
-    private inline fun <reified ErrorType> parseError(data: ByteArray, contentType: String, contentEncoding: String, httpCode: Int): ErrorType?
+    private inline fun <reified ErrorType: Any> parseError(data: ByteArray, contentType: String, contentEncoding: String, httpCode: Int): ErrorType?
     {
-        return data.uuFromJson()
+        return UUJson.fromBytes(data, ErrorType::class.java)
     }
 }
