@@ -2,22 +2,13 @@ package com.silverpine.uu.networking
 
 import java.net.URL
 
-class UUHttpUri(
-    val url: String,
-    val query: UUQueryStringArgs = UUQueryStringArgs(),
-    val path: UUPathArgs = UUPathArgs())
+data class UUHttpUri(
+    var url: String,
+    var query: UUQueryStringArgs = UUQueryStringArgs(),
+    var path: UUPathArgs = UUPathArgs())
 {
-    fun toURL(): URL?
-    {
-        return try
-        {
-            URL(toString())
-        }
-        catch (ex: Exception)
-        {
-            null
-        }
-    }
+    internal val fullUrl: URL
+        get() = URL(toString())
 
     override fun toString(): String
     {

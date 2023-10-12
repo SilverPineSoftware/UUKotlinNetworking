@@ -38,17 +38,10 @@ open class UUHttpSession<ErrorType>
 
         try
         {
-            val openConnectionError = openConnection(request)
-            if (openConnectionError.second != null)
-            {
-                response.error = openConnectionError.second
-                return response
-            }
-
-            urlConnection = openConnectionError.first
+            urlConnection = request.openConnection()
             if (urlConnection == null)
             {
-                response.error = UUHttpError.create(UUHttpErrorCode.INVALID_REQUEST)
+                response.error = UUHttpError.create(UUHttpErrorCode.OpenConnectionFailure)
                 return response
             }
 
@@ -57,34 +50,19 @@ open class UUHttpSession<ErrorType>
             UULog.d(javaClass, "executeRequest", "${request.method} ${urlConnection.url} ")
             UULog.d(javaClass, "executeRequest", "Timeout: ${request.timeout}")
 
-            var requestBody: ByteArray? = null
-            var requestBodyLength = 0
-
-            request.body?.let()
-            { body ->
-
-                body.encodeBody()?.let()
-                { bodyContent ->
-
-                    request.headers.putSingle("Content-Type", body.contentType)
-                    request.headers.putSingle("Content-Encoding", body.contentEncoding)
-                    request.headers.putSingle("Content-Length", "${bodyContent.size}")
-                    requestBody = bodyContent
-                    requestBodyLength = bodyContent.size
-                }
+            val (requestBody, serializeError) = request.serializeBody()
+            if (serializeError != null)
+            {
+                response.error = serializeError
+                return response
             }
 
-            request.headers.log("executeRequest", "RequestHeaders")
-
-            request.headers.forEach()
-            { key, value ->
-                urlConnection.setRequestProperty(key, value.joinToString(","))
-            }
+            request.applyHeaders(urlConnection)
 
             requestBody?.let()
             {
                 urlConnection.doOutput = true
-                urlConnection.setFixedLengthStreamingMode(requestBodyLength)
+                urlConnection.setFixedLengthStreamingMode(it.size)
                 val writeError = writeRequest(urlConnection, it)
                 if (writeError != null)
                 {
@@ -106,6 +84,7 @@ open class UUHttpSession<ErrorType>
             response.headers.log("executeRequest", "ResponseHeader")
 
             downloadResponse(urlConnection, response)
+
             if (response.error != null)
             {
                 return response
@@ -124,33 +103,84 @@ open class UUHttpSession<ErrorType>
         return response
     }
 
-    private fun <SuccessType, ErrorType> openConnection(request: UUHttpRequest<SuccessType, ErrorType>): Pair<HttpURLConnection?, UUError?>
+    private fun UUHttpRequest<*,*>.openConnection(): HttpURLConnection?
     {
-        val url = request.uri.toURL()
-        if (url == null)
+        var urlConnection: HttpURLConnection? = null
+
+        try
         {
-            return Pair(null, UUHttpError.create(UUHttpErrorCode.INVALID_REQUEST))
+            val url = uri.fullUrl
+
+            urlConnection = if (proxy != null)
+            {
+                url.openConnection(proxy) as? HttpURLConnection
+            }
+            else
+            {
+                url.openConnection() as? HttpURLConnection
+            }
+
+            urlConnection?.connectTimeout = timeout
+            urlConnection?.readTimeout = timeout
+            urlConnection?.doInput = true
+            urlConnection?.requestMethod = method.toString()
+
+            if (useGZipCompression)
+            {
+                urlConnection?.setRequestProperty("Accept-Encoding", "gzip")
+            }
+        }
+        catch (ex: Exception)
+        {
+            UULog.d(javaClass, "openConnection", "", ex)
         }
 
-        val urlConnection = if (request.proxy != null)
+        return urlConnection
+    }
+
+    private fun UUHttpRequest<*,*>.serializeBody(): Pair<ByteArray?, UUError?>
+    {
+        var requestBody: ByteArray? = null
+        var requestBodyLength: Int
+        var error: UUError? = null
+        try
         {
-            url.openConnection(request.proxy) as? HttpURLConnection
+            body?.let()
+            { body ->
+
+                requestBody = body.encodeBody()
+                requestBodyLength = requestBody?.size ?: 0
+
+                if (requestBodyLength > 0)
+                {
+                    headers.putSingle("Content-Type", body.contentType)
+                    headers.putSingle("Content-Length", "$requestBodyLength")
+                }
+                else
+                {
+                    // No exceptions thrown but a non-null UUHttpBody object should result in a
+                    // non null payload
+                    error = UUHttpError.create(UUHttpErrorCode.SERIALIZE_FAILURE)
+                }
+            }
         }
-        else
+        catch (ex: Exception)
         {
-            url.openConnection() as? HttpURLConnection
+            UULog.d(javaClass, "serializeBody", "", ex)
+            error = UUHttpError.fromException(UUHttpErrorCode.SERIALIZE_FAILURE, ex)
         }
 
-        urlConnection?.connectTimeout = request.timeout
-        urlConnection?.readTimeout = request.timeout
-        urlConnection?.requestMethod = request.method.toString()
+        return Pair(requestBody, error)
+    }
 
-        if (request.useGZipCompression)
-        {
-            urlConnection?.setRequestProperty("Accept-Encoding", "gzip")
+    private fun UUHttpRequest<*,*>.applyHeaders(urlConnection: HttpURLConnection)
+    {
+        headers.log("applyHeaders", "RequestHeaders")
+
+        headers.forEach()
+        { key, value ->
+            urlConnection.setRequestProperty(key, value.joinToString(","))
         }
-
-        return Pair(urlConnection, null)
     }
 
     private fun writeRequest(connection: HttpURLConnection, body: ByteArray): UUError?

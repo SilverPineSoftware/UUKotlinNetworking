@@ -1,17 +1,20 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUError
+import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.uuDispatch
 
-open class UURemoteApi<ErrorType>(
+open class UURemoteApi<ErrorType: Any>(
+    private val errorClass: Class<ErrorType>,
     var session: UUHttpSession<ErrorType>,
     var authorizationProvider: UUHttpAuthorizationProvider? = null)
 {
     private var isAuthorizingFlag: Boolean = false
     private var authorizeListeners: ArrayList<(Boolean, UUError?)->Unit> = arrayListOf()
 
-    fun <ResponseType> executeAuthorizedRequest(
+    fun <ResponseType: Any> executeAuthorizedRequest(
         request: UUHttpRequest<ResponseType, ErrorType>,
+        responseClass: Class<ResponseType>,
         completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
         renewApiAuthorizationIfNeeded()
@@ -25,7 +28,7 @@ open class UURemoteApi<ErrorType>(
                 return@renewApiAuthorizationIfNeeded
             }
 
-            executeOneAuthorizedRequest(request)
+            executeOneAuthorizedRequest(request, responseClass)
             { response ->
 
                 response.error?.let()
@@ -45,7 +48,7 @@ open class UURemoteApi<ErrorType>(
                             {
                                 if (didAttempt)
                                 {
-                                    executeOneAuthorizedRequest(request, completion)
+                                    executeOneAuthorizedRequest(request, responseClass, completion)
                                 }
                                 else
                                 {
@@ -70,12 +73,13 @@ open class UURemoteApi<ErrorType>(
     /**
     Executes a single request with no api authorization checks
      */
-    fun <ResponseType> executeOneAuthorizedRequest(
+    fun <ResponseType: Any> executeOneAuthorizedRequest(
         request: UUHttpRequest<ResponseType, ErrorType>,
+        responseClass: Class<ResponseType>,
         completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
         authorizationProvider?.attachAuthorization(request.headers)
-        session.executeRequest(request, completion)
+        executeRequest(request, responseClass, completion)
     }
 
     /**
@@ -84,10 +88,17 @@ open class UURemoteApi<ErrorType>(
      * @param request the request
      * @param completion the callback
      */
-    fun <ResponseType> executeRequest(
+    fun <ResponseType: Any> executeRequest(
         request: UUHttpRequest<ResponseType, ErrorType>,
+        responseClass: Class<ResponseType>,
         completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
+        request.responseParser =
+            { data, contentType, contentEncoding ->
+                parseSuccess(responseClass, data, contentType, contentEncoding)
+            }
+
+        request.errorParser = this::parseError
         session.executeRequest(request, completion)
     }
 
@@ -127,6 +138,16 @@ open class UURemoteApi<ErrorType>(
     open fun cancelAll()
     {
         session.cancelAll()
+    }
+
+    private fun <ResponseType: Any> parseSuccess(responseClass: Class<ResponseType>, data: ByteArray, contentType: String, contentEncoding: String): ResponseType?
+    {
+        return UUJson.fromBytes(data, responseClass)
+    }
+
+    protected open fun parseError(data: ByteArray, contentType: String, contentEncoding: String, httpCode: Int): ErrorType?
+    {
+        return UUJson.fromBytes(data, errorClass)
     }
 
     // MARK: Private Implementation

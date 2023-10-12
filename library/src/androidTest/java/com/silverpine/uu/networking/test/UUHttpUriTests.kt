@@ -7,6 +7,8 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
+import java.lang.Exception
+import java.net.MalformedURLException
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -17,11 +19,11 @@ class UUHttpUriTests
         const val ROOT_URL = "https://foobar.unit.test"
     }
 
-    @Test
+    @Test(expected = MalformedURLException::class)
     fun test_0000_formatUrl_empty()
     {
         val input = UUHttpUri("")
-        val actual = input.toURL()?.toString()
+        val actual = input.fullUrl.toString()
         Assert.assertNull(actual)
     }
 
@@ -29,7 +31,7 @@ class UUHttpUriTests
     fun test_0001_formatUrl_noQuery_noPath()
     {
         val input = UUHttpUri(ROOT_URL)
-        val actual = input.toURL()?.toString()
+        val actual = input.fullUrl.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals(ROOT_URL, actual)
     }
@@ -40,7 +42,7 @@ class UUHttpUriTests
         val input = UUHttpUri(ROOT_URL)
         input.query["foo"] = "bar"
 
-        val actual = input.toURL()?.toString()
+        val actual = input.fullUrl.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL?foo=bar", actual)
     }
@@ -52,7 +54,7 @@ class UUHttpUriTests
         input.query["foo"] = "bar"
         input.query["two"] = "three"
 
-        val actual = input.toURL()?.toString()
+        val actual = input.fullUrl.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL?foo=bar&two=three", actual)
     }
@@ -63,7 +65,7 @@ class UUHttpUriTests
         val input = UUHttpUri(ROOT_URL)
         input.path.add("one")
 
-        val actual = input.toURL()?.toString()
+        val actual = input.fullUrl.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL/one", actual)
     }
@@ -75,7 +77,7 @@ class UUHttpUriTests
         input.path.add("one")
         input.path.add("two")
 
-        val actual = input.toURL()?.toString()
+        val actual = input.fullUrl.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL/one/two", actual)
     }
@@ -87,7 +89,7 @@ class UUHttpUriTests
         input.query["foo"] = "bar"
         input.path.add("one")
 
-        val actual = input.toURL()?.toString()
+        val actual = input.fullUrl.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL/one?foo=bar", actual)
     }
@@ -101,7 +103,7 @@ class UUHttpUriTests
         input.path.add("one")
         input.path.add("two")
 
-        val actual = input.toURL()?.toString()
+        val actual = input.fullUrl.toString()
         Assert.assertNotNull(actual)
         Assert.assertEquals("$ROOT_URL/one/two?foo=bar&baz=what", actual)
     }

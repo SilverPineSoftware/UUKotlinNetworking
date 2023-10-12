@@ -34,15 +34,17 @@ enum class UUHttpErrorCode(val value: Int)
     // Returned when a user cancels an operation
     USER_CANCELLED(1005),
 
-    // The request URL and/or query string parameters resulted in an invalid
-    // URL.
-    INVALID_REQUEST(1006),
+    /**
+     * An exception was caught when attempting to open the URL Connection. Check the exception
+     * property of UUError for additional details.
+     */
+    OpenConnectionFailure(1006),
 
     // UU failed to parse a response.  See underlying error for more details
     PARSE_FAILURE(1007),
 
     /**
-     * An exception was caught when serializing the request body.  Check the exception
+     * An exception was caught when serializing the request body. Check the exception
      * property of UUError for additional details.
      */
     SERIALIZE_FAILURE(1008),

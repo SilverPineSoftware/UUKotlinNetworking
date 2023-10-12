@@ -1,16 +1,13 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUJson
-import com.silverpine.uu.core.uuToByteArray
-import java.nio.charset.Charset
+import com.silverpine.uu.core.uuUtf8ByteArray
 
-open class UUHttpBody(
-    var contentType: String,
-    var contentEncoding: String)
+open class UUHttpBody(var contentType: String)
 {
-    var content: ByteArray? = null
+    private var content: ByteArray? = null
 
-    constructor(contentType: String, contentEncoding: String, content: ByteArray?): this(contentType, contentEncoding)
+    constructor(contentType: String, content: ByteArray?): this(contentType)
     {
         this.content = content
     }
@@ -21,11 +18,11 @@ open class UUHttpBody(
     }
 }
 
-class UUJsonBody<T: Any>(private val jsonObject: T, private val charset: Charset = Charsets.UTF_8): UUHttpBody(UUContentType.APPLICATION_JSON, charset.name())
+class UUJsonBody<T: Any>(private val jsonObject: T): UUHttpBody(UUContentType.APPLICATION_JSON)
 {
     override fun encodeBody(): ByteArray?
     {
         val json = UUJson.toJson(jsonObject, jsonObject.javaClass)
-        return json?.uuToByteArray(charset)
+        return json?.uuUtf8ByteArray()
     }
 }
