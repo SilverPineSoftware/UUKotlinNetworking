@@ -12,6 +12,8 @@ import javax.net.ssl.SSLException
 object UUHttpError
 {
     const val DOMAIN = "UUHttpErrorDomain"
+    const val HTTP_CODE_KEY = "httpCode"
+    const val USER_INFO_KEY = "userInfo"
 
     fun create(code: UUHttpErrorCode): UUError
     {
@@ -50,17 +52,28 @@ object UUHttpError
         }
 
         val info = Bundle()
-        info.putParcelable("userInfo", userInfo)
+        info.putParcelable(USER_INFO_KEY, userInfo)
+        info.putInt(HTTP_CODE_KEY, httpCode)
 
         return UUError(adjustedCode.value, DOMAIN, userInfo = info)
     }
 }
 
-fun UUError.uuHttpErrorCode(): UUHttpErrorCode?
+fun UUError.uuErrorCode(): UUHttpErrorCode?
 {
     if (domain == UUHttpError.DOMAIN)
     {
         return UUHttpErrorCode.fromInt(code)
+    }
+
+    return null
+}
+
+fun UUError.uuHttpStatusCode(): Int?
+{
+    if (domain == UUHttpError.DOMAIN)
+    {
+        return userInfo?.getInt(UUHttpError.HTTP_CODE_KEY)
     }
 
     return null

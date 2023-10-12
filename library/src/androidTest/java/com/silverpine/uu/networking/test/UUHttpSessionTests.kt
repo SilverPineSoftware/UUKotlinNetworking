@@ -3,8 +3,6 @@ package com.silverpine.uu.networking.test
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.silverpine.uu.core.UURandom
 import com.silverpine.uu.core.uuSleep
-import com.silverpine.uu.core.uuToJson
-import com.silverpine.uu.core.uuUtf8ByteArray
 import com.silverpine.uu.networking.*
 import com.silverpine.uu.test.letters
 import org.junit.After
@@ -74,8 +72,9 @@ class UUHttpSessionTests
         //val body = uuJsonBody(model)
         val request = UUHttpRequest<TestModel, UUEmptyResponse>(uri)
         request.method = UUHttpMethod.POST
-        request.body = model.uuToJson()?.uuUtf8ByteArray()
-        request.bodyContentType = UUContentType.APPLICATION_JSON
+        //request.body = model.uuToJson()?.uuUtf8ByteArray()
+        //request.bodyContentType = UUContentType.APPLICATION_JSON
+        request.body = UUJsonBody(model, TestModel.serializer())
 
         request.responseParser =
         { bytes, contentType, contentEncoding ->

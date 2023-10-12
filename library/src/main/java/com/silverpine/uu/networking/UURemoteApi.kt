@@ -120,7 +120,7 @@ open class UURemoteApi<ErrorType>(
      */
     open fun shouldRenewApiAuthorization(error: UUError): Boolean
     {
-        val errorCode = error.uuHttpErrorCode() ?: return false
+        val errorCode = error.uuErrorCode() ?: return false
         return (errorCode == UUHttpErrorCode.AUTHORIZATION_NEEDED)
     }
 
