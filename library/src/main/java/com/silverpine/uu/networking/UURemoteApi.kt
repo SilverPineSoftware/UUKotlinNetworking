@@ -78,9 +78,17 @@ open class UURemoteApi<ErrorType: Any>(
         responseClass: Class<ResponseType>,
         completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
-        authorizationProvider?.attachAuthorization(request.headers)
-        executeRequest(request, responseClass, completion)
+        attachAthorizationHeaders(request.headers)
+        {
+            executeRequest(request, responseClass, completion)
+        }
     }
+
+    open fun attachAthorizationHeaders(headers: UUHttpHeaders, completion: () -> Unit)
+    {
+        // Default does nothing
+    }
+
 
     /**
      * Executes a single request with no authorization added

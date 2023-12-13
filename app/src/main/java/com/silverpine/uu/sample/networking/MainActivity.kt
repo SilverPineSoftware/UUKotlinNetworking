@@ -5,10 +5,14 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UURandom
-import com.silverpine.uu.networking.*
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.Moshi
+import com.silverpine.uu.networking.UUEmptyResponse
+import com.silverpine.uu.networking.UUHttpMethod
+import com.silverpine.uu.networking.UUHttpRequest
+import com.silverpine.uu.networking.UUHttpResponse
+import com.silverpine.uu.networking.UUHttpSession
+import com.silverpine.uu.networking.UUHttpUri
+import com.silverpine.uu.networking.UUJsonBody
+import kotlinx.serialization.Serializable
 
 class MainActivity : AppCompatActivity()
 {
@@ -17,7 +21,6 @@ class MainActivity : AppCompatActivity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        UUJson.init(Moshi.Builder().build())
         test_0001_simple_echo_post()
     }
 
@@ -32,7 +35,10 @@ class MainActivity : AppCompatActivity()
         model.xp = UURandom.uShort().toInt()
 
         val body = UUJsonBody(model)
-        val request = UUHttpRequest<TestModel, UUEmptyResponse>(uri, method = UUHttpMethod.POST, body = body)
+        val request = UUHttpRequest<TestModel, UUEmptyResponse>(uri)
+        request.method = UUHttpMethod.POST
+        request.body = body
+
         request.responseParser =
             { data, _, _ ->
                 UUJson.fromBytes(data, TestModel::class.java)
@@ -57,18 +63,11 @@ class MainActivity : AppCompatActivity()
 }
 
 @Keep
-@JsonClass(generateAdapter = true)
-open class TestModel
+@Serializable
+class TestModel()
 {
-    @Json
     var id: String = ""
-
-    @Json
     var name: String = ""
-
-    @Json
     var level: Int = 0
-
-    @Json
     var xp: Int = 0
 }
