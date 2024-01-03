@@ -42,7 +42,7 @@ class UUHttpSessionTests
 
         // A single shot timer gets cleaned up after the timer block is invoked, so we need
         // to wait.  This is a hacky way to test, but works in this simple case
-        uuSleep("doAfter", 100)
+        uuSleep(100)
     }
 
     @Test
