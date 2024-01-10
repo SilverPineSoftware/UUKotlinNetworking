@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.OutputStream
 import java.net.HttpURLConnection
+import javax.net.ssl.HttpsURLConnection
 
 open class UUHttpSession<ErrorType>
 {
@@ -128,6 +129,11 @@ open class UUHttpSession<ErrorType>
             if (useGZipCompression)
             {
                 urlConnection?.setRequestProperty("Accept-Encoding", "gzip")
+            }
+
+            if (urlConnection is HttpsURLConnection)
+            {
+                urlConnection.sslSocketFactory = socketFactory
             }
         }
         catch (ex: Exception)

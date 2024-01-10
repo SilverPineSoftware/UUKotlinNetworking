@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.Proxy
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLSocketFactory
 
 
 typealias UURawStreamParser = (InputStream)->Any?
@@ -25,6 +27,7 @@ open class UURawHttpRequest(var uri: UUHttpUri)
     var proxy: Proxy? = null
     var successResponseHandler: UURawStreamParser = { null }
     var errorResponseHandler: UURawStreamParser = { null }
+    var socketFactory: SSLSocketFactory? = null
 
     companion object
     {
@@ -58,6 +61,11 @@ open class UURawHttpRequest(var uri: UUHttpUri)
             if (useGZipCompression)
             {
                 urlConnection?.setRequestProperty("Accept-Encoding", "gzip")
+            }
+
+            if (urlConnection is HttpsURLConnection)
+            {
+                urlConnection.sslSocketFactory = socketFactory
             }
         }
         catch (ex: Exception)
