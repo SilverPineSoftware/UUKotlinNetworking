@@ -178,4 +178,59 @@ class UURawHttpTests
                 UULog.d(javaClass, "printZip", it.absolutePathString())
             }
     }
+
+    // sample how to use basic auth and client certs
+    
+    /*
+    @Test
+    fun test_0004_get_with_client_cert()
+    {
+        UULog.init(UUConsoleLogger())
+
+        val url = "url here"
+        val user = "user name here"
+        val pwd = "password here"
+
+        val cert = """
+            -----BEGIN CERTIFICATE-----
+            cert bytes
+            -----END CERTIFICATE-----
+            ....
+            -----BEGIN PRIVATE KEY-----
+            pk bytes
+            -----END PRIVATE KEY-----
+        """.trimIndent()
+
+        val socketFactory = UUClientCertSocketFactory()
+        socketFactory.plainTextPemCert = cert
+
+        val uri = UUHttpUri(url)
+
+        val request = UUHttpRequest<UUEmptyResponse, UUEmptyResponse>(uri)
+        request.method = UUHttpMethod.GET
+        request.socketFactory = socketFactory.getSocketFactory()
+
+        val authProvider = object: UUBasicAuthorizationProvider
+        {
+            override val userName: String = user
+            override val password: String = pwd
+        }
+
+        authProvider.attachAuthorization(request.headers)
+
+        val latch = CountDownLatch(1)
+
+        var response: UUHttpResponse<UUEmptyResponse,UUEmptyResponse>? = null
+        val session = UUHttpSession<UUEmptyResponse>()
+        session.logResponses = true
+        session.executeRequest(request)
+        {
+            response = it
+            latch.countDown()
+        }
+
+        latch.await()
+
+        Assert.assertNotNull(response)
+    }*/
 }
