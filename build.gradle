@@ -1,18 +1,25 @@
 buildscript {
     ext.min_sdk = 26
     ext.target_sdk = 34
-    ext.gradle_version = '8.1.4'
-    ext.kotlin_version = '1.9.21'
-    ext.uu_test_version = '0.0.4'
-    ext.uu_core_version = '0.0.10'
+    ext.gradle_version = '8.9.1'
+    ext.kotlin_version = '2.1.20'
+    ext.ksp_tools_version = '2.1.20-2.0.0'
+    ext.java_version = JavaVersion.VERSION_17
+
+    //ext.uu_test_version = '0.0.5'
+    //ext.uu_test_version = '0.0.5-DEV-20'
+    ext.uu_test_version = '0.0.5.20-develop-SNAPSHOT'
+    //ext.uu_core_version = '0.0.13'
+    //ext.uu_core_version = '0.0.13-DEV-130'
+    ext.uu_core_version = '0.0.13.91-develop-SNAPSHOT'
 }
 
 plugins {
-    id 'com.android.application' version "${gradle_version}" apply false
-    id 'com.android.library' version "${gradle_version}" apply false
+    id 'com.android.application' version '8.9.1' apply false
+    id 'com.android.library' version '8.9.1' apply false
     id 'org.jetbrains.kotlin.android' version "${kotlin_version}" apply false
-    id 'io.github.gradle-nexus.publish-plugin' version '1.1.0' apply true
-    id 'org.jetbrains.kotlin.plugin.serialization' version "${kotlin_version}" apply true
+    id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version "${kotlin_version}"
 }
 
 apply from: "./publish-common.gradle"

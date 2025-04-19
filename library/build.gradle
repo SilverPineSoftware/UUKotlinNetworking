@@ -5,7 +5,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.devtools.ksp' version '1.9.21-1.0.16'
+    id 'com.google.devtools.ksp' version "${ksp_tools_version}"
     id 'org.jetbrains.kotlin.plugin.serialization'
     id 'kotlinx-serialization'
 }
@@ -35,9 +35,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility java_version
+        targetCompatibility java_version
+    }
+
+    kotlinOptions {
+        jvmTarget = java_version
     }
 
     buildFeatures {
@@ -48,17 +53,18 @@ android {
 
 dependencies {
 
-    implementation 'androidx.annotation:annotation:1.7.1'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2'
+    implementation 'androidx.annotation:annotation:1.9.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3'
 
     implementation "com.silverpine.uu:uu-core-ktx:${uu_core_version}"
+    implementation 'androidx.test.ext:junit-ktx:1.2.1'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation "com.silverpine.uu:uu-test-ktx:${uu_test_version}"
 
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
     androidTestImplementation "com.silverpine.uu:uu-test-ktx:${uu_test_version}"
 }
 
