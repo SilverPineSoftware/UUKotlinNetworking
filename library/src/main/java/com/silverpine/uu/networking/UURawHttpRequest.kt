@@ -91,8 +91,7 @@ open class UURawHttpRequest(var uri: UUHttpUri)
 
                 if (requestBodyLength > 0)
                 {
-                    headers.putSingle("Content-Type", body.contentType)
-                    headers.putSingle("Content-Length", "$requestBodyLength")
+                    body.uuSetHeaders(headers, requestBodyLength)
                 }
                 else
                 {
