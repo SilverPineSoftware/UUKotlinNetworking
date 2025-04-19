@@ -6,12 +6,8 @@ buildscript {
     ext.ksp_tools_version = '2.1.20-2.0.0'
     ext.java_version = JavaVersion.VERSION_17
 
-    //ext.uu_test_version = '0.0.5'
-    //ext.uu_test_version = '0.0.5-DEV-20'
-    ext.uu_test_version = '0.0.5.20-develop-SNAPSHOT'
-    //ext.uu_core_version = '0.0.13'
-    //ext.uu_core_version = '0.0.13-DEV-130'
-    ext.uu_core_version = '0.0.13.91-develop-SNAPSHOT'
+    ext.uu_test_version = '0.0.6'
+    ext.uu_core_version = '0.0.13'
 }
 
 plugins {
