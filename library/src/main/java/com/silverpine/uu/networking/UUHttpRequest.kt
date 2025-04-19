@@ -21,7 +21,7 @@ open class UUHttpRequest<SuccessType, ErrorType>(var uri: UUHttpUri)
 
     companion object
     {
-        var DEFAULT_TIMEOUT = (60 * UUDate.MILLIS_IN_ONE_SECOND).toInt()
+        var DEFAULT_TIMEOUT = (60 * UUDate.Constants.millisInOneSecond).toInt()
     }
 
     var startTime: Long = 0
