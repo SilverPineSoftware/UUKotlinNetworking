@@ -2,13 +2,13 @@ package com.silverpine.uu.networking
 
 import android.os.Parcelable
 import com.silverpine.uu.core.UUError
+import com.silverpine.uu.core.uuReadAll
 import com.silverpine.uu.core.uuUtf8
 import com.silverpine.uu.logging.UULog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.BufferedOutputStream
-import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.OutputStream
 import java.net.HttpURLConnection
@@ -159,8 +159,7 @@ open class UUHttpSession<ErrorType>
 
                 if (requestBodyLength > 0)
                 {
-                    headers.putSingle("Content-Type", body.contentType)
-                    headers.putSingle("Content-Length", "$requestBodyLength")
+                    body.uuSetHeaders(headers, requestBodyLength)
                 }
                 else
                 {
@@ -250,29 +249,16 @@ open class UUHttpSession<ErrorType>
                 urlConnection.errorStream
             }
 
-            var bytesRead: Int
-            val buffer = ByteArray(10240)
-            val bos = ByteArrayOutputStream()
-
-            while (true)
+            val responseBytes = readStream.uuReadAll()
+            if (responseBytes != null)
             {
-                bytesRead = readStream.read(buffer, 0, buffer.size)
-                if (bytesRead == -1)
+                if (logResponses)
                 {
-                    break
+                    UULog.d(javaClass, "executeRequest", "ResponseBody: ${responseBytes.uuUtf8()}")
                 }
 
-                bos.write(buffer, 0, bytesRead)
+                parseResponse(responseBytes, response)
             }
-
-            val responseBytes = bos.toByteArray()
-
-            if (logResponses)
-            {
-                UULog.d(javaClass, "executeRequest", "ResponseBody: ${responseBytes.uuUtf8()}")
-            }
-            
-            parseResponse(responseBytes, response)
         }
         catch (ex: Exception)
         {
