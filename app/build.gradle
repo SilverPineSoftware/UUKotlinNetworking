@@ -4,18 +4,18 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-parcelize'
     id 'kotlin-kapt'
-    id 'com.google.devtools.ksp' version "${ksp_tools_version}"
+    id 'com.google.devtools.ksp' version "${uu_ksp_tools_version}"
     id 'org.jetbrains.kotlin.plugin.serialization'
     id 'kotlinx-serialization'
 }
 
 android {
-    compileSdkVersion target_sdk
+    compileSdkVersion uu_target_sdk
 
     defaultConfig {
         applicationId "com.silverpine.uu.sample.networking"
-        minSdkVersion min_sdk
-        targetSdkVersion target_sdk
+        minSdkVersion uu_min_sdk
+        targetSdkVersion uu_target_sdk
         versionCode 1
         versionName "1.0"
 
@@ -30,12 +30,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility java_version
-        targetCompatibility java_version
+        sourceCompatibility uu_java_version
+        targetCompatibility uu_java_version
     }
 
     kotlinOptions {
-        jvmTarget = java_version
+        jvmTarget = uu_java_version
     }
 
     namespace 'com.silverpine.uu.sample.networking'

@@ -5,7 +5,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.devtools.ksp' version "${ksp_tools_version}"
+    id 'com.google.devtools.ksp' version "${uu_ksp_tools_version}"
     id 'org.jetbrains.kotlin.plugin.serialization'
     id 'kotlinx-serialization'
 }
@@ -16,41 +16,7 @@ ext {
     SCM_MODULE_NAME = 'UUKotlinNetworking'
 }
 
-apply from: "../uu-build-common.gradle"
-
-android {
-    compileSdkVersion target_sdk
-
-    defaultConfig {
-        minSdkVersion min_sdk
-        targetSdkVersion target_sdk
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles "consumer-rules.pro"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility java_version
-        targetCompatibility java_version
-    }
-
-    kotlinOptions {
-        jvmTarget = java_version
-    }
-
-    buildFeatures {
-        buildConfig true
-    }
-
-    namespace 'com.silverpine.uu.networking'
-}
+apply from: "${uu_build_common}/uu-build-common.gradle"
 
 dependencies {
 
