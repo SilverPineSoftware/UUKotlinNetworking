@@ -1,19 +1,24 @@
 buildscript {
     ext.uu_namespace = 'com.silverpine.uu.networking'
+    ext.uu_publish_artifact_id = 'uu-networking-ktx'
+    ext.uu_publish_description = 'Useful Utilities Networking'
+    ext.uu_scm_module_name = 'UUKotlinNetworking'
+
     ext.uu_min_sdk = 26
     ext.uu_target_sdk = 36
     ext.uu_gradle_version = '8.10.1'
     ext.uu_kotlin_version = '2.1.20'
-    ext.uu_ksp_tools_version = '2.1.20-2.0.0'
     ext.uu_nexus_version = '2.0.0'
-    ext.uu_test_version = '0.0.7'
-    ext.uu_core_version = '0.0.16'
     ext.uu_java_version = JavaVersion.VERSION_17
-    ext.uu_build_common_version = '0.0.6'
+    ext.uu_ksp_tools_version = '2.1.20-2.0.0'
+
+    ext.uu_build_common_version = '0.0.10'
     ext.uu_build_common_url = 'https://raw.githubusercontent.com/SilverPineSoftware/UUKotlinBuild'
     ext.uu_build_common = "${uu_build_common_url}/${uu_build_common_version}"
-}
 
+    ext.uu_test_version = '0.0.7'
+    ext.uu_core_version = '0.0.16'
+}
 
 plugins {
     id 'com.android.application' version "${uu_gradle_version}" apply false
@@ -24,3 +29,5 @@ plugins {
 }
 
 apply from: "${uu_build_common}/uu-publish-common.gradle"
+
+

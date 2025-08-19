@@ -10,13 +10,7 @@ plugins {
     id 'kotlinx-serialization'
 }
 
-ext {
-    PUBLISH_ARTIFACT_ID = 'uu-networking-ktx'
-    PUBLISH_DESCRIPTION = 'Useful Utilities Networking'
-    SCM_MODULE_NAME = 'UUKotlinNetworking'
-}
-
-apply from: "${uu_build_common}/uu-build-common.gradle"
+apply from: "${uu_build_common}/uu-build-library-common.gradle"
 
 dependencies {
 
