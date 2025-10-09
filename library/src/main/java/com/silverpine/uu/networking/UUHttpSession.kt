@@ -134,6 +134,7 @@ open class UUHttpSession<ErrorType>
             if (urlConnection is HttpsURLConnection)
             {
                 urlConnection.sslSocketFactory = socketFactory
+                urlConnection.hostnameVerifier = hostNameVerifier
             }
         }
         catch (ex: Exception)
@@ -194,7 +195,7 @@ open class UUHttpSession<ErrorType>
 
         try
         {
-            UULog.d(javaClass, "executeRequest", "RequestBody: ${body.uuUtf8()}")
+            UULog.d(javaClass, "executeRequest", "RequestBody: ${body.uuUtf8().getOrNull()}")
             os = BufferedOutputStream(connection.outputStream)
             os.write(body)
             os.flush()

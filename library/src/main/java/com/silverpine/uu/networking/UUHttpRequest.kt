@@ -2,6 +2,7 @@ package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUDate
 import java.net.Proxy
+import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLSocketFactory
 
 typealias UUByteArrayParser<T> = ((ByteArray,String,String)->T?)
@@ -18,6 +19,8 @@ open class UUHttpRequest<SuccessType, ErrorType>(var uri: UUHttpUri)
     var responseParser: UUByteArrayParser<SuccessType>? = null
     var errorParser: UUErrorParser<ErrorType>? = null
     var socketFactory: SSLSocketFactory? = null
+    var hostNameVerifier: HostnameVerifier? = null
+    var authorizationProvider: UUHttpAuthorizationProvider? = null
 
     companion object
     {

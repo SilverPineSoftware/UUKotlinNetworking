@@ -6,8 +6,7 @@ import com.silverpine.uu.core.uuDispatch
 
 open class UURemoteApi<ErrorType: Any>(
     private val errorClass: Class<ErrorType>,
-    var session: UUHttpSession<ErrorType>,
-    var authorizationProvider: UUHttpAuthorizationProvider? = null)
+    var session: UUHttpSession<ErrorType>)
 {
     private var isAuthorizingFlag: Boolean = false
     private var authorizeListeners: ArrayList<(Boolean, UUError?)->Unit> = arrayListOf()
@@ -78,16 +77,19 @@ open class UURemoteApi<ErrorType: Any>(
         responseClass: Class<ResponseType>,
         completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
-        attachAthorizationHeaders(request.headers)
-        {
+        request.authorizationProvider?.attachAuthorization(request.headers)
+        //attachAuthorizationHeaders(request)
+        //{
             executeRequest(request, responseClass, completion)
-        }
+        //}
     }
 
-    open fun attachAthorizationHeaders(headers: UUHttpHeaders, completion: () -> Unit)
+    /*open fun <ResponseType: Any> attachAuthorizationHeaders(request: UUHttpRequest<ResponseType, ErrorType>, completion: () -> Unit)
     {
+        request.authorizationProvider?.attachAuthorization(request.headers)
         // Default does nothing
-    }
+        completion()
+    }*/
 
 
     /**
@@ -101,12 +103,19 @@ open class UURemoteApi<ErrorType: Any>(
         responseClass: Class<ResponseType>,
         completion: (UUHttpResponse<ResponseType, ErrorType>)->Unit)
     {
-        request.responseParser =
+        if (request.responseParser == null)
+        {
+            request.responseParser =
             { data, contentType, contentEncoding ->
                 parseSuccess(responseClass, data, contentType, contentEncoding)
             }
+        }
 
-        request.errorParser = this::parseError
+        if (request.errorParser == null)
+        {
+            request.errorParser = this::parseError
+        }
+
         session.executeRequest(request, completion)
     }
 
