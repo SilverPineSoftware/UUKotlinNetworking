@@ -1,6 +1,17 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.logging.UULog
+import java.net.URLConnection
+
+enum class UUHttpHeader(val key: String)
+{
+    AcceptEncoding("Accept-Encoding")
+}
+
+fun URLConnection.uuPutHeader(header: UUHttpHeader, value: String)
+{
+    setRequestProperty(header.key, value)
+}
 
 class UUHttpHeaders(other: Map<String, List<String>> = mapOf()): HashMap<String, List<String>>(other)
 {

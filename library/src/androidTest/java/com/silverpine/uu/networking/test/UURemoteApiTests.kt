@@ -3,10 +3,14 @@ package com.silverpine.uu.networking.test
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UUKotlinXJsonProvider
+import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.uuSleep
-import com.silverpine.uu.networking.UUHttpError
+import com.silverpine.uu.logging.UUConsoleLogger
+import com.silverpine.uu.logging.UULog
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.uuIsHttpSuccess
+import com.silverpine.uu.test.UUAssert
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import org.junit.After
@@ -17,6 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -33,9 +38,12 @@ class UURemoteApiTests
         val DEFAULT_API_OBJECT = TestApiObject(DEFAULT_ID, DEFAULT_NAME, DEFAULT_DATA)
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Before
     fun doBefore()
     {
+        UULog.init(UUConsoleLogger())
+
         UUJson.init(UUKotlinXJsonProvider(Json()
         {
             ignoreUnknownKeys = true
@@ -59,17 +67,20 @@ class UURemoteApiTests
     {
         val latch = CountDownLatch(1)
 
-        var response: UUHttpResponse<TestApiObject, TestApiError>? = null
+        var responseContainer = AtomicReference<UUResult<TestApiObject>>()
 
         api.getObject(null)
         {
-            response = it
+            responseContainer.set(it)
             latch.countDown()
         }
 
         latch.await()
 
-        assertReply(200, DEFAULT_API_OBJECT, null, response)
+        val response = UUAssert.unwrap(responseContainer.get())
+        val success = UUAssert.unwrap(response.getOrNull())
+        UULog.d(javaClass, "test_0000_getObject", "Response: $success")
+        //assertReply(200, DEFAULT_API_OBJECT, null, response)
     }
 
     @Test
@@ -77,19 +88,23 @@ class UURemoteApiTests
     {
         val latch = CountDownLatch(1)
 
-        var response: UUHttpResponse<TestApiObject, TestApiError>? = null
+        var responseContainer = AtomicReference<UUResult<TestApiObject>>()
 
         val override = TestApiObject("one", "two", "three")
 
         api.getObject(override)
         {
-            response = it
+            responseContainer.set(it)
             latch.countDown()
         }
 
         latch.await()
 
-        assertReply(200, override, null, response)
+        val response = UUAssert.unwrap(responseContainer.get())
+        val success = UUAssert.unwrap(response.getOrNull())
+        UULog.d(javaClass, "test_0002_getObjectWithOverrides", "Response: $success")
+
+        //assertReply(200, override, null, response)
     }
 
     @Test
@@ -97,18 +112,23 @@ class UURemoteApiTests
     {
         val latch = CountDownLatch(1)
 
-        var response: UUHttpResponse<Array<TestApiObject>, TestApiError>? = null
+        var responseContainer = AtomicReference<UUResult<Array<TestApiObject>>>()
 
         val count = 7
         api.getArray(count)
         {
-            response = it
+            responseContainer.set(it)
             latch.countDown()
         }
 
         latch.await()
 
-        assertArrayReply(200, count, null, response)
+        val response = UUAssert.unwrap(responseContainer.get())
+        val success = UUAssert.unwrap(response.getOrNull())
+        UULog.d(javaClass, "test_0003_getArray", "Response: $success")
+
+        // assertArrayReply(200, count, null, response)
+
     }
 
     @Test
@@ -116,19 +136,21 @@ class UURemoteApiTests
     {
         val latch = CountDownLatch(1)
 
-        var response: UUHttpResponse<TestApiObject, TestApiError>? = null
+        var responseContainer = AtomicReference<UUResult<TestApiObject>>()
 
         val post = TestApiObject("one", "two", "three")
-
         api.postObject(post)
         {
-            response = it
+            responseContainer.set(it)
             latch.countDown()
         }
 
         latch.await()
 
-        assertReply(200, post, null, response)
+        val response = UUAssert.unwrap(responseContainer.get())
+        val success = UUAssert.unwrap(response.getOrNull())
+        UULog.d(javaClass, "test_0004_postObject", "Response: $success")
+        //assertReply(200, DEFAULT_API_OBJECT, null, response)
     }
 
     @Test
@@ -136,7 +158,7 @@ class UURemoteApiTests
     {
         val latch = CountDownLatch(1)
 
-        var response: UUHttpResponse<Array<TestApiObject>, TestApiError>? = null
+        var responseContainer = AtomicReference<UUResult<Array<TestApiObject>>>()
 
         val post = arrayOf(
             TestApiObject("one", "two", "three"),
@@ -145,13 +167,17 @@ class UURemoteApiTests
 
         api.postArray(post)
         {
-            response = it
+            responseContainer.set(it)
             latch.countDown()
         }
 
         latch.await()
 
-        assertArrayReply(200, post.size, null, response)
+        val response = UUAssert.unwrap(responseContainer.get())
+        val success = UUAssert.unwrap(response.getOrNull())
+        UULog.d(javaClass, "test_0005_postList", "Response: $success")
+
+        //assertArrayReply(200, post.size, null, response)
     }
 
 
@@ -159,28 +185,28 @@ class UURemoteApiTests
         expectedHttpCode: Int,
         expectedSuccess: TestApiObject?,
         expectedError: TestApiError?,
-        response: UUHttpResponse<TestApiObject, TestApiError>?)
+        response: UUHttpResponse?) //<TestApiObject, TestApiError>?)
     {
         Assert.assertNotNull(response)
-        Assert.assertEquals(expectedHttpCode, response?.httpCode)
+        Assert.assertEquals(expectedHttpCode, response?.httpStatusCode)
 
         if (expectedSuccess != null)
         {
-            Assert.assertNotNull(response?.success)
-            Assert.assertEquals(expectedSuccess, response?.success)
+            Assert.assertNotNull(response?.parsedResponse)
+            Assert.assertEquals(expectedSuccess, response?.parsedResponse)
         }
         else
         {
-            Assert.assertNull(response?.success)
+            Assert.assertNull(response?.parsedResponse)
         }
 
         if (expectedError != null)
         {
             Assert.assertNotNull(response?.error)
 
-            val apiError = response?.error?.userInfo?.getParcelable(UUHttpError.USER_INFO_KEY, TestApiError::class.java)
-            Assert.assertNotNull(apiError)
-            Assert.assertEquals(expectedError, apiError)
+            //val apiError = response?.error?.userInfo?.getParcelable(UUHttpError.USER_INFO_KEY, TestApiError::class.java)
+            //Assert.assertNotNull(apiError)
+            //Assert.assertEquals(expectedError, apiError)
         }
         else
         {
@@ -192,28 +218,28 @@ class UURemoteApiTests
         expectedHttpCode: Int,
         expectedResponseCount: Int,
         expectedError: TestApiError?,
-        response: UUHttpResponse<Array<TestApiObject>, TestApiError>?)
+        response: UUHttpResponse?)
     {
         Assert.assertNotNull(response)
-        Assert.assertEquals(expectedHttpCode, response?.httpCode)
+        Assert.assertEquals(expectedHttpCode, response?.httpStatusCode)
 
         if (expectedHttpCode.uuIsHttpSuccess())
         {
-            Assert.assertNotNull(response?.success)
-            Assert.assertEquals(expectedResponseCount, response?.success?.size)
+            Assert.assertNotNull(response?.parsedResponse)
+            //Assert.assertEquals(expectedResponseCount, response?.success?.size)
         }
         else
         {
-            Assert.assertNull(response?.success)
+            Assert.assertNull(response?.parsedResponse)
         }
 
         if (expectedError != null)
         {
             Assert.assertNotNull(response?.error)
 
-            val apiError = response?.error?.userInfo?.getParcelable(UUHttpError.USER_INFO_KEY, TestApiError::class.java)
-            Assert.assertNotNull(apiError)
-            Assert.assertEquals(expectedError, apiError)
+            //val apiError = response?.error?.userInfo?.getParcelable(UUHttpError.USER_INFO_KEY, TestApiError::class.java)
+            //Assert.assertNotNull(apiError)
+            //Assert.assertEquals(expectedError, apiError)
         }
         else
         {

@@ -11,4 +11,9 @@ class TestModel
     var name: String = ""
     var level: Int = 0
     var xp: Int = 0
+
+    override fun toString(): String
+    {
+        return "id: $id, name: $name, level: $level, xp: $xp"
+    }
 }

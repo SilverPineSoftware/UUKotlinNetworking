@@ -7,9 +7,17 @@ import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.UURandom
 import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.core.uuUnzip
+import com.silverpine.uu.logging.UUConsoleLogger
 import com.silverpine.uu.logging.UULog
-import com.silverpine.uu.networking.*
+import com.silverpine.uu.networking.UUHttpStreamParser
+import com.silverpine.uu.networking.UUHttpMethod
+import com.silverpine.uu.networking.UUHttpRequest
+import com.silverpine.uu.networking.UUHttpResponse
+import com.silverpine.uu.networking.UUHttpSession
+import com.silverpine.uu.networking.UUHttpUri
+import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.test.uuRandomLetters
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import org.junit.After
@@ -22,7 +30,6 @@ import org.junit.runners.MethodSorters
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 import java.util.concurrent.CountDownLatch
 import kotlin.io.path.absolutePathString
 
@@ -30,9 +37,12 @@ import kotlin.io.path.absolutePathString
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class UURawHttpTests
 {
+    @OptIn(ExperimentalSerializationApi::class)
     @Before
     fun doBefore()
     {
+        UULog.init(UUConsoleLogger())
+
         UUJson.init(
             UUKotlinXJsonProvider(Json()
         {
@@ -56,12 +66,13 @@ class UURawHttpTests
     fun test_0000_simple_get()
     {
         val uri = UUHttpUri("https://spsw.io/uu/echo_json.php")
-        val request = UURawHttpRequest(uri)
+        val request = UUHttpRequest(uri)
+        val session = UUHttpSession()
 
         val latch = CountDownLatch(1)
 
-        var response: UURawHttpResponse? = null
-        request.execute()
+        var response: UUHttpResponse? = null
+        session.executeRequest(request)
         {
             response = it
             latch.countDown()
@@ -77,21 +88,23 @@ class UURawHttpTests
     {
         val uri = UUHttpUri("https://spsw.io/uu/echo_json.php?id=foo&name=bar&level=1&xp=57")
 
-        val request = UURawHttpRequest(uri)
+        val request = UUHttpRequest(uri)
+
         request.method = UUHttpMethod.POST
 
         val count = 3
         request.headers.putSingle("uu-return-object-count", "$count")
 
-        request.successResponseHandler =
-        {
-            UUJson.fromStream(it, Array<TestModel>::class.java)
+        val session = UUHttpSession()
+
+        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
+            UUJson.fromStream(stream, Array<TestModel>::class.java)
         }
 
         val latch = CountDownLatch(1)
 
-        var response: UURawHttpResponse? = null
-        request.execute()
+        var response: UUHttpResponse? = null
+        session.executeRequest(request)
         {
             response = it
             latch.countDown()
@@ -100,8 +113,9 @@ class UURawHttpTests
         latch.await()
 
         Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.success)
-        //Assert.assertTrue(response?.success is Array<TestModel>)
+        Assert.assertNotNull(response?.parsedResponse)
+        //assert(response?.parsedResponse is Array<*> && response.parsedResponse.isArrayOf<TestModel>()<TestModel>())
+        //Assert.assertTrue(response?.parsedResponse is Array<*> && response.parsedResponse.isArrayOf<TestModel>())
     }
 
     @Test
@@ -115,19 +129,20 @@ class UURawHttpTests
         model.level = UURandom.uByte().toInt()
         model.xp = UURandom.uShort().toInt()
 
-        val request = UURawHttpRequest(uri)
+        val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(model)
 
-        request.successResponseHandler =
-        { it ->
-            UUJson.fromStream(it, TestModel::class.java)
+        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
+            UUJson.fromStream(stream, TestModel::class.java)
         }
 
         val latch = CountDownLatch(1)
 
-        var response: UURawHttpResponse? = null
-        request.execute()
+        val session = UUHttpSession()
+
+        var response: UUHttpResponse? = null
+        session.executeRequest(request)
         {
             response = it
             latch.countDown()
@@ -136,8 +151,8 @@ class UURawHttpTests
         latch.await()
 
         Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.success)
-        Assert.assertTrue(response?.success is TestModel)
+        Assert.assertNotNull(response?.parsedResponse)
+        Assert.assertTrue(response?.parsedResponse is TestModel)
     }
 
     @Test
@@ -145,21 +160,23 @@ class UURawHttpTests
     {
         val uri = UUHttpUri("https://spsw.io/uu/random_zip_100.zip")
 
-        val request = UURawHttpRequest(uri)
+        val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.GET
 
-        request.successResponseHandler =
-        { it ->
+        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
+
             val applicationContext = InstrumentationRegistry.getInstrumentation().targetContext
             val outputFolder = Paths.get("${applicationContext.noBackupFilesDir}/uu2")
-            it.uuUnzip(outputFolder)
+            stream.uuUnzip(outputFolder)
             outputFolder
         }
 
         val latch = CountDownLatch(1)
 
-        var response: UURawHttpResponse? = null
-        request.execute()
+        val session = UUHttpSession()
+
+        var response: UUHttpResponse? = null
+        session.executeRequest(request)
         {
             response = it
             latch.countDown()
@@ -168,10 +185,10 @@ class UURawHttpTests
         latch.await()
 
         Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.success)
-        Assert.assertTrue(response?.success is Path)
+        Assert.assertNotNull(response?.parsedResponse)
+        Assert.assertTrue(response?.parsedResponse is Path)
 
-        val path = response?.success as? Path
+        val path = response?.parsedResponse as? Path
         Files.walk(path)
             .forEach()
             {

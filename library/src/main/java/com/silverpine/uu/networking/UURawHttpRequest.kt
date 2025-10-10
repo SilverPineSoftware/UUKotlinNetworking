@@ -1,5 +1,6 @@
 package com.silverpine.uu.networking
 
+/*
 import android.os.Parcelable
 import com.silverpine.uu.core.UUDate
 import com.silverpine.uu.core.UUError
@@ -270,4 +271,4 @@ open class UURawHttpRequest(var uri: UUHttpUri)
 }
 
 
-
+*/

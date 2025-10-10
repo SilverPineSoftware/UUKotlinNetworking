@@ -1,12 +1,24 @@
 package com.silverpine.uu.networking.test
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.silverpine.uu.core.UUDate
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.UURandom
 import com.silverpine.uu.core.uuSleep
-import com.silverpine.uu.networking.*
+import com.silverpine.uu.core.uuUtf8
+import com.silverpine.uu.logging.UUConsoleLogger
+import com.silverpine.uu.logging.UULog
+import com.silverpine.uu.networking.UUHttpStreamParser
+import com.silverpine.uu.networking.UUHttpMethod
+import com.silverpine.uu.networking.UUHttpRequest
+import com.silverpine.uu.networking.UUHttpResponse
+import com.silverpine.uu.networking.UUHttpSession
+import com.silverpine.uu.networking.UUHttpUri
+import com.silverpine.uu.networking.UUJsonBody
+import com.silverpine.uu.test.UUAssert
 import com.silverpine.uu.test.uuRandomLetters
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import org.junit.After
@@ -16,22 +28,32 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import java.util.*
+import java.io.InputStream
+import java.net.HttpURLConnection
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class UUHttpSessionTests
 {
+    @OptIn(ExperimentalSerializationApi::class)
     @Before
     fun doBefore()
     {
+        UULog.init(UUConsoleLogger())
+
         UUJson.init(
             UUKotlinXJsonProvider(Json()
-        {
-            ignoreUnknownKeys = true
-            namingStrategy = JsonNamingStrategy.SnakeCase
-        })
+            {
+                ignoreUnknownKeys = true
+                namingStrategy = JsonNamingStrategy.SnakeCase
+                explicitNulls = false
+                encodeDefaults = true
+                isLenient = true
+            })
         )
     }
 
@@ -46,25 +68,44 @@ class UUHttpSessionTests
     }
 
     @Test
+    fun test_objectSerialization()
+    {
+        val obj = TestApiObject("1234", "UnitTest", "Data here")
+        val json = UUJson.toJson(obj, obj.javaClass)
+        UULog.d(javaClass, "test_objectSerialization", "JSON: $json")
+    }
+
+    @Test
+    fun test_errorSerialization()
+    {
+        val obj = TestApiError(1234, "UnitTest")
+        val json = UUJson.toJson(obj, obj.javaClass)
+        UULog.d(javaClass, "test_errorSerialization", "JSON: $json")
+    }
+
+    @Test
+    fun test_modelSerialization()
+    {
+        val obj = TestModel().apply { id = "1234"; name = "Unit Test"; level = 57; xp = 99; }
+        val json = UUJson.toJson(obj, obj.javaClass)
+        UULog.d(javaClass, "test_errorSerialization", "JSON: $json")
+    }
+
+    @Test
     fun test_0000_simple_get()
     {
         val uri = UUHttpUri("https://spsw.io/uu/echo_json.php")
-        val request = UUHttpRequest<UUEmptyResponse, UUEmptyResponse>(uri)
-
-        val latch = CountDownLatch(1)
-
-        var response: UUHttpResponse<UUEmptyResponse, UUEmptyResponse>? = null
-        val session = UUHttpSession<UUEmptyResponse>()
+        val request = UUHttpRequest(uri)
+        val session = UUHttpSession()
         session.logResponses = true
-        session.executeRequest(request)
-        {
-            response = it
-            latch.countDown()
-        }
 
-        latch.await()
+        val response = doRequest(session, request)
+        Assert.assertNull(response.error)
 
-        Assert.assertNotNull(response)
+        val success = UUAssert.unwrap(response.parsedResponse)
+        assert(success is ByteArray)
+        val bytes = UUAssert.unwrap(success as? ByteArray)
+        UULog.d(javaClass, "test_0000_simple_get", "Success: ${bytes.uuUtf8().getOrNull()}")
     }
 
     @Test
@@ -72,33 +113,28 @@ class UUHttpSessionTests
     {
         val uri = UUHttpUri("https://spsw.io/uu/echo_json.php?id=foo&name=bar&level=1&xp=57")
 
-        val request = UUHttpRequest<Array<TestModel>, UUEmptyResponse>(uri)
-        request.method = UUHttpMethod.POST
+        val request = UUHttpRequest(uri)
+        request.method = UUHttpMethod.GET
 
         val count = 3
         request.headers.putSingle("uu-return-object-count", "$count")
 
-        request.responseParser =
-            { bytes, contentType, contentEncoding ->
-
-                UUJson.fromBytes(bytes, Array<TestModel>::class.java)
-            }
-
-        val latch = CountDownLatch(1)
-
-        var response: UUHttpResponse<Array<TestModel>, UUEmptyResponse>? = null
-        val session = UUHttpSession<UUEmptyResponse>()
-        session.executeRequest(request)
+        request.responseHandler.successParser = object: UUHttpStreamParser
         {
-            response = it
-            latch.countDown()
+            override fun parse(stream: InputStream, response: HttpURLConnection): Any?
+            {
+                return UUJson.fromStream(stream, Array<TestModel>::class.java)
+            }
         }
 
-        latch.await()
+        val session = UUHttpSession()
 
-        Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.success)
-        Assert.assertTrue(response?.success is Array<TestModel>)
+        val response = doRequest(session, request)
+        Assert.assertNull(response.error)
+
+        val success = UUAssert.unwrap(response.parsedResponse)
+        assert(success is Array<*> && success.isArrayOf<TestModel>())
+        UULog.d(javaClass, "test_0001_get_list", "Success: $success")
     }
 
     @Test
@@ -112,29 +148,43 @@ class UUHttpSessionTests
         model.level = UURandom.uByte().toInt()
         model.xp = UURandom.uShort().toInt()
 
-        val request = UUHttpRequest<TestModel, UUEmptyResponse>(uri)
+        val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(model)
 
-        request.responseParser =
-        { bytes, contentType, contentEncoding ->
-            UUJson.fromBytes(bytes, TestModel::class.java)
+        request.responseHandler.successParser = object: UUHttpStreamParser
+        {
+            override fun parse(stream: InputStream, response: HttpURLConnection): Any?
+            {
+                return UUJson.fromStream(stream, TestModel::class.java)
+            }
         }
 
-        val latch = CountDownLatch(1)
+        val session = UUHttpSession()
 
-        var response: UUHttpResponse<TestModel, UUEmptyResponse>? = null
-        val session = UUHttpSession<UUEmptyResponse>()
+        val response = doRequest(session, request)
+        Assert.assertNull(response.error)
+
+        val success = UUAssert.unwrap(response.parsedResponse)
+        assert(success is TestModel)
+        UULog.d(javaClass, "test_0002_simple_echo_post", "Success: $success")
+    }
+
+    @OptIn(ExperimentalAtomicApi::class)
+    private fun doRequest(session: UUHttpSession, request: UUHttpRequest, timeout: Long = UUDate.Constants.millisInOneSecond * 30): UUHttpResponse
+    {
+        val latch = CountDownLatch(1)
+        val responseContainer = AtomicReference<UUHttpResponse?>(null)
+        session.logResponses = true
+
         session.executeRequest(request)
-        {
-            response = it
+        { response ->
+            responseContainer.store(response)
             latch.countDown()
         }
 
-        latch.await()
-
-        Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.success)
-        Assert.assertTrue(response?.success is TestModel)
+        latch.await(timeout, TimeUnit.MILLISECONDS)
+        val response = UUAssert.unwrap(responseContainer.load())
+        return response
     }
 }

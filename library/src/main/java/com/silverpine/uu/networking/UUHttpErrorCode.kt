@@ -77,7 +77,7 @@ enum class UUHttpErrorCode(val value: Int)
 
         fun fromInt(value: Int): UUHttpErrorCode
         {
-            values().forEach()
+            entries.forEach()
             {
                 if (it.value == value)
                 {

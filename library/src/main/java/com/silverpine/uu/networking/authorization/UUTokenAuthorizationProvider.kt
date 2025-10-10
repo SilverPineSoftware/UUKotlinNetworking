@@ -1,4 +1,6 @@
-package com.silverpine.uu.networking
+package com.silverpine.uu.networking.authorization
+
+import com.silverpine.uu.networking.UUHttpHeaders
 
 interface UUTokenAuthorizationProvider: UUHttpAuthorizationProvider
 {

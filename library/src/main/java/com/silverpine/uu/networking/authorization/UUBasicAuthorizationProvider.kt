@@ -1,7 +1,8 @@
-package com.silverpine.uu.networking
+package com.silverpine.uu.networking.authorization
 
 import com.silverpine.uu.core.uuAsciiByteArray
 import com.silverpine.uu.core.uuBase64
+import com.silverpine.uu.networking.UUHttpHeaders
 
 interface UUBasicAuthorizationProvider: UUHttpAuthorizationProvider
 {

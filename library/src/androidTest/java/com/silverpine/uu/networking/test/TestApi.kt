@@ -1,20 +1,22 @@
 package com.silverpine.uu.networking.test
 
-import android.os.Parcelable
+import com.silverpine.uu.core.UUError
+import com.silverpine.uu.core.UUResult
+import com.silverpine.uu.core.UUResultBlock
 import com.silverpine.uu.networking.UUHttpMethod
-import com.silverpine.uu.networking.UUHttpRequest
-import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.UUHttpSession
 import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.UUQueryStringArgs
 import com.silverpine.uu.networking.UURemoteApi
-import kotlinx.parcelize.Parcelize
+import com.silverpine.uu.networking.UUTypedHttpRequest
 import kotlinx.serialization.Serializable
 
 @Serializable
-@Parcelize
-data class TestApiError(var errorCode: Int, var errorMessage: String): Parcelable
+// @Parcelize
+data class TestApiError(
+    var errorCode: Int = 0,
+    var errorMessage: String = "") //: Parcelable
 {
     override fun equals(other: Any?): Boolean
     {
@@ -23,10 +25,20 @@ data class TestApiError(var errorCode: Int, var errorMessage: String): Parcelabl
         return (errorCode == o.errorCode &&
                 errorMessage == o.errorMessage)
     }
+
+    override fun hashCode(): Int
+    {
+        var result = errorCode
+        result = 31 * result + errorMessage.hashCode()
+        return result
+    }
 }
 
 @Serializable
-data class TestApiObject(var id: String, var name: String, var data: String)
+data class TestApiObject(
+    var id: String = "",
+    var name: String = "",
+    var data: String = "")
 {
     override fun equals(other: Any?): Boolean
     {
@@ -36,15 +48,29 @@ data class TestApiObject(var id: String, var name: String, var data: String)
                 name == o.name &&
                 data == o.data)
     }
+
+    override fun hashCode(): Int
+    {
+        var result = id.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + data.hashCode()
+        return result
+    }
 }
 
 interface ITestApi
 {
-    fun getObject(echo: TestApiObject?, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
-    fun getArray(count: Int, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>)->Unit)
+//    fun getObject(echo: TestApiObject?, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
+//    fun getArray(count: Int, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>)->Unit)
+//
+//    fun postObject(obj: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
+//    fun postArray(array: Array<TestApiObject>, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>) -> Unit)
 
-    fun postObject(obj: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
-    fun postArray(array: Array<TestApiObject>, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>) -> Unit)
+    fun getObject(echo: TestApiObject?, completion: UUResultBlock<TestApiObject>)
+    fun getArray(count: Int, completion: UUResultBlock<Array<TestApiObject>>)
+
+    fun postObject(obj: TestApiObject, completion: UUResultBlock<TestApiObject>)
+    fun postArray(array: Array<TestApiObject>, completion: UUResultBlock<Array<TestApiObject>>)
 
     /*
     fun postObject(request: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
@@ -77,14 +103,14 @@ interface ITestApi
 }
 
 
-class TestApi(private val apiUrl: String): UURemoteApi<TestApiError>(TestApiError::class.java, UUHttpSession()), ITestApi
+class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestApi
 {
     init
     {
         session.logResponses = true
     }
 
-    override fun getObject(echo: TestApiObject?, completion: (UUHttpResponse<TestApiObject, TestApiError>) -> Unit)
+    override fun getObject(echo: TestApiObject?, completion: UUResultBlock<TestApiObject>)
     {
         val queryArgs = UUQueryStringArgs()
 
@@ -107,36 +133,87 @@ class TestApi(private val apiUrl: String): UURemoteApi<TestApiError>(TestApiErro
         }
 
         val uri = UUHttpUri("$apiUrl/single", queryArgs)
-        val request = UUHttpRequest<TestApiObject, TestApiError>(uri)
-        executeRequest(request, TestApiObject::class.java, completion)
+        val request = UUTypedHttpRequest<TestApiObject, TestApiError>(uri, TestApiObject::class.java, TestApiError::class.java)
+        executeRequest(request)
+        { response ->
+
+            val result = response.parsedResponse as? TestApiObject
+            if (result != null)
+            {
+                completion(UUResult.success(result))
+            }
+            else
+            {
+                completion(UUResult.failure(response.error ?: UUError(code = -1)))
+            }
+        }
     }
 
-    override fun getArray(count: Int, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>) -> Unit)
+    override fun getArray(count: Int, completion: UUResultBlock<Array<TestApiObject>>)
     {
         val queryArgs = UUQueryStringArgs()
         queryArgs["count"] = "$count"
 
         val uri = UUHttpUri("$apiUrl/multiple", query = queryArgs)
-        val request = UUHttpRequest<Array<TestApiObject>, TestApiError>(uri)
-        executeRequest(request, Array<TestApiObject>::class.java, completion)
+        val request = UUTypedHttpRequest<Array<TestApiObject>, TestApiError>(uri, Array<TestApiObject>::class.java, TestApiError::class.java)
+        executeRequest(request)
+        { response ->
+
+            @Suppress("UNCHECKED_CAST")
+            val result = (response.parsedResponse as? Array<*>) as? Array<TestApiObject>
+            if (result != null)
+            {
+                completion(UUResult.success(result))
+            }
+            else
+            {
+                completion(UUResult.failure(response.error ?: UUError(code = -1)))
+            }
+        }
     }
 
-    override fun postObject(obj: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>) -> Unit)
+    override fun postObject(obj: TestApiObject, completion: UUResultBlock<TestApiObject>)
     {
         val uri = UUHttpUri("$apiUrl/single")
-        val request = UUHttpRequest<TestApiObject, TestApiError>(uri)
+        val request = UUTypedHttpRequest<TestApiObject, TestApiError>(uri, TestApiObject::class.java, TestApiError::class.java)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(obj)
-        executeRequest(request, TestApiObject::class.java, completion)
+
+        executeRequest(request)
+        { response ->
+
+            val result = response.parsedResponse as? TestApiObject
+            if (result != null)
+            {
+                completion(UUResult.success(result))
+            }
+            else
+            {
+                completion(UUResult.failure(response.error ?: UUError(code = -1)))
+            }
+        }
     }
 
-    override fun postArray(array: Array<TestApiObject>, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>) -> Unit)
+    override fun postArray(array: Array<TestApiObject>, completion: UUResultBlock<Array<TestApiObject>>)
     {
         val uri = UUHttpUri("$apiUrl/single")
-        val request = UUHttpRequest<Array<TestApiObject>, TestApiError>(uri)
+        val request = UUTypedHttpRequest<Array<TestApiObject>, TestApiError>(uri, Array<TestApiObject>::class.java, TestApiError::class.java)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(array)
 
-        executeRequest(request, Array<TestApiObject>::class.java, completion)
+        executeRequest(request)
+        { response ->
+
+            @Suppress("UNCHECKED_CAST")
+            val result = (response.parsedResponse as? Array<*>) as? Array<TestApiObject>
+            if (result != null)
+            {
+                completion(UUResult.success(result))
+            }
+            else
+            {
+                completion(UUResult.failure(response.error ?: UUError(code = -1)))
+            }
+        }
     }
 }
