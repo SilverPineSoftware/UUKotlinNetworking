@@ -1,15 +1,16 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUError
-import java.io.InputStream
+import com.silverpine.uu.logging.UULog
 import java.net.HttpURLConnection
+import java.util.zip.GZIPInputStream
+import java.util.zip.InflaterInputStream
 
 interface UUHttpResponseHandler
 {
     suspend fun handleResponse(
         request: UUHttpRequest,
         response: HttpURLConnection,
-        stream: InputStream
     ): UUHttpResponse
 
     val successParser: UUHttpStreamParser
@@ -18,23 +19,55 @@ interface UUHttpResponseHandler
 
 open class UUBaseResponseHandler() : UUHttpResponseHandler
 {
-    override suspend fun handleResponse(
-        request: UUHttpRequest,
-        connection: HttpURLConnection,
-        stream: InputStream,
-    ): UUHttpResponse
+    override suspend fun handleResponse(request: UUHttpRequest, urlConnection: HttpURLConnection): UUHttpResponse
     {
-        val parser = if (connection.responseCode.uuIsHttpSuccess())
+        try
         {
-            request.responseHandler.successParser
-        }
-        else
-        {
-            request.responseHandler.errorParser
-        }
+            val isSuccess = urlConnection.responseCode.uuIsHttpSuccess()
 
-        val parsedResponse = parser.parse(stream, connection)
-        return finishHandleResponse(request, connection,/* responseBytes,*/ parsedResponse)
+            var readStream = if (isSuccess)
+            {
+                urlConnection.inputStream
+            }
+            else
+            {
+                urlConnection.errorStream
+            }
+
+            when (urlConnection.contentEncoding?.lowercase())
+            {
+                "gzip" -> readStream = GZIPInputStream(readStream)
+                "deflate" -> readStream = InflaterInputStream(readStream)
+            }
+
+            /*if (logResponses)
+            {
+                UULog.d(javaClass, "downloadResponse", "ResponseBody: ${readStream.uuReadAll()?.uuUtf8()?.getOrNull()}")
+            }*/
+
+            //return request.responseHandler.handleResponse(request, urlConnection, readStream)
+
+            val parser = if (isSuccess)
+            {
+                successParser
+            }
+            else
+            {
+                errorParser
+            }
+
+            val parsedResponse = parser.parse(readStream, urlConnection)
+            return finishHandleResponse(request, urlConnection, parsedResponse)
+        }
+        catch (ex: Exception)
+        {
+            UULog.d(javaClass, "downloadResponse", "", ex)
+
+            return UUHttpResponse(
+                request = request,
+                error = UUHttpError.fromException(UUHttpErrorCode.READ_FAILED, ex)
+            )
+        }
     }
 
     private fun finishHandleResponse(
@@ -83,10 +116,4 @@ open class UUTypedResponseHandler<SuccessType: Any, ErrorType: Any>(
 {
     override val successParser: UUHttpStreamParser = UUTypedStreamParser<SuccessType>(successClass)
     override val errorParser: UUHttpStreamParser = UUTypedStreamParser<ErrorType>(errorClass)
-}
-
-open class UUPassthroughResponseHandler: UUBaseResponseHandler()
-{
-    override val successParser: UUHttpStreamParser = UUBinaryStreamParser()
-    override val errorParser: UUHttpStreamParser = UUBinaryStreamParser()
 }

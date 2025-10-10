@@ -68,6 +68,9 @@ enum class UUHttpErrorCode(val value: Int)
     // Error code returned when an unknown error occurs.  This is typically a developer error. Contact the Api developers.
     UNHANDLED_EXCEPTION(1012),
 
+    // An exception was caught in HandleResponse
+    HandleResponseException(1013),
+
     // Error code returned when an unknown error occurs.  This is typically a developer error. Contact the Api developers.
     UNDEFINED(1999);
 

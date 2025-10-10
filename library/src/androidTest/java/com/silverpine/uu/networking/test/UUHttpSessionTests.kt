@@ -137,14 +137,6 @@ class UUHttpSessionTests
         val count = 3
         request.headers.putSingle("uu-return-object-count", "$count")
 
-        /*request.responseHandler.successParser = object: UUHttpStreamParser
-        {
-            override fun parse(stream: InputStream, response: HttpURLConnection): Any?
-            {
-                return UUJson.fromStream(stream, Array<TestModel>::class.java)
-            }
-        }*/
-
         request.responseHandler = UUTypedResponseHandler<Array<TestModel>, Void>(Array<TestModel>::class.java, Void::class.java)
 
         val session = UUHttpSession()

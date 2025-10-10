@@ -9,13 +9,15 @@ import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.core.uuUnzip
 import com.silverpine.uu.logging.UUConsoleLogger
 import com.silverpine.uu.logging.UULog
-import com.silverpine.uu.networking.UUHttpStreamParser
+import com.silverpine.uu.networking.UUBaseResponseHandler
 import com.silverpine.uu.networking.UUHttpMethod
 import com.silverpine.uu.networking.UUHttpRequest
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.UUHttpSession
+import com.silverpine.uu.networking.UUHttpStreamParser
 import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UUJsonBody
+import com.silverpine.uu.networking.UUTypedResponseHandler
 import com.silverpine.uu.test.uuRandomLetters
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -94,14 +96,9 @@ class UURawHttpTests
 
         val count = 3
         request.headers.putSingle("uu-return-object-count", "$count")
+        request.responseHandler = UUTypedResponseHandler<Array<TestModel>, Void>(Array<TestModel>::class.java, Void::class.java)
 
         val session = UUHttpSession()
-
-//        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
-//            UUJson.fromStream(stream, Array<TestModel>::class.java)
-//        }
-
-        //request.responseHandler = U
 
         val latch = CountDownLatch(1)
 
@@ -134,10 +131,7 @@ class UURawHttpTests
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(model)
-
-//        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
-//            UUJson.fromStream(stream, TestModel::class.java)
-//        }
+        request.responseHandler = UUTypedResponseHandler<TestModel, Void>(TestModel::class.java, Void::class.java)
 
         val latch = CountDownLatch(1)
 
@@ -165,13 +159,16 @@ class UURawHttpTests
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.GET
 
-        /*request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
+        request.responseHandler = object: UUBaseResponseHandler()
+        {
+            override val successParser: UUHttpStreamParser = UUHttpStreamParser { stream, response ->
 
-            val applicationContext = InstrumentationRegistry.getInstrumentation().targetContext
-            val outputFolder = Paths.get("${applicationContext.noBackupFilesDir}/uu2")
-            stream.uuUnzip(outputFolder)
-            outputFolder
-        }*/
+                val applicationContext = InstrumentationRegistry.getInstrumentation().targetContext
+                val outputFolder = Paths.get("${applicationContext.noBackupFilesDir}/uu2")
+                stream.uuUnzip(outputFolder)
+                outputFolder
+            }
+        }
 
         val latch = CountDownLatch(1)
 
