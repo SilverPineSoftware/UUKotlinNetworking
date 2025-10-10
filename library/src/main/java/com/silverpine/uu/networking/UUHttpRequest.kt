@@ -10,9 +10,6 @@ import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLSocketFactory
 
-//typealias UUByteArrayParser<T> = ((ByteArray,String,String)->T?)
-//typealias UUErrorParser<T> = ((ByteArray,String,String,Int)->T?)
-
 open class UUHttpRequest(var uri: UUHttpUri)
 {
     var method: UUHttpMethod = UUHttpMethod.GET
@@ -21,8 +18,6 @@ open class UUHttpRequest(var uri: UUHttpUri)
     var timeout: Int = DEFAULT_TIMEOUT
     var useGZipCompression: Boolean = true
     var proxy: Proxy? = null
-    //var responseParser: UUByteArrayParser<SuccessType>? = null
-    //var errorParser: UUErrorParser<ErrorType>? = null
     var socketFactory: SSLSocketFactory? = null
     var hostNameVerifier: HostnameVerifier? = null
     var authorizationProvider: UUHttpAuthorizationProvider? = null
@@ -148,55 +143,10 @@ open class UUTypedHttpRequest<SuccessType: Any, ErrorType: Any>(uri: UUHttpUri,
                                                                 errorClass: Class<ErrorType>,
     ):  UUHttpRequest(uri)
 {
-//    var successParser: UUByteArrayParser<SuccessType> =
-//        { (data, contentType, contentEncoding) ->
-//            return UUJson.fromBytes(data, successClass)
-//        }
-//
-//    var errorParser: UUErrorParser<ErrorType>? = null
-
     init
     {
         responseHandler = UUTypedResponseHandler<SuccessType, ErrorType>(successClass, errorClass)
-
-
-        /*
-        if (request.responseParser == null)
-        {
-            request.responseParser =
-                { data, contentType, contentEncoding ->
-                    parseSuccess(responseClass, data, contentType, contentEncoding)
-                }
-        }
-
-        if (request.errorParser == null)
-        {
-            request.errorParser = this::parseError
-        }
-
-        protected open fun parseError(data: ByteArray, contentType: String, contentEncoding: String, httpCode: Int): ErrorType?
-        {
-            return UUJson.fromBytes(data, errorClass)
-        }*/
     }
-    /*var method: UUHttpMethod = UUHttpMethod.GET
-    var headers: UUHttpHeaders = UUHttpHeaders()
-    var body: UUHttpBody? = null
-    var timeout: Int = DEFAULT_TIMEOUT
-    var useGZipCompression: Boolean = true
-    var proxy: Proxy? = null
-    var responseParser: UUByteArrayParser<SuccessType>? = null
-    var errorParser: UUErrorParser<ErrorType>? = null
-    var socketFactory: SSLSocketFactory? = null
-    var hostNameVerifier: HostnameVerifier? = null
-    var authorizationProvider: UUHttpAuthorizationProvider? = null
-
-    companion object
-    {
-        var DEFAULT_TIMEOUT = (60 * UUDate.Constants.millisInOneSecond).toInt()
-    }
-
-    var startTime: Long = 0*/
 }
 
 

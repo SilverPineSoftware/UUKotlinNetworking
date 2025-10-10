@@ -1,5 +1,6 @@
 package com.silverpine.uu.networking.test
 
+import androidx.annotation.Keep
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.silverpine.uu.core.UUDate
 import com.silverpine.uu.core.UUJson
@@ -9,16 +10,19 @@ import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.core.uuUtf8
 import com.silverpine.uu.logging.UUConsoleLogger
 import com.silverpine.uu.logging.UULog
-import com.silverpine.uu.networking.UUHttpStreamParser
+import com.silverpine.uu.networking.UUHttpHeader
 import com.silverpine.uu.networking.UUHttpMethod
 import com.silverpine.uu.networking.UUHttpRequest
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.UUHttpSession
+import com.silverpine.uu.networking.UUHttpStreamParser
 import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UUJsonBody
+import com.silverpine.uu.networking.UUTypedResponseHandler
 import com.silverpine.uu.test.UUAssert
 import com.silverpine.uu.test.uuRandomLetters
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import org.junit.After
@@ -34,6 +38,20 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+
+@Keep
+@Serializable
+class GetModel
+{
+    var id: String = ""
+    var name: String = ""
+    var data: String = ""
+
+    override fun toString(): String
+    {
+        return "id: $id, name: $name, data: $data"
+    }
+}
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -119,13 +137,15 @@ class UUHttpSessionTests
         val count = 3
         request.headers.putSingle("uu-return-object-count", "$count")
 
-        request.responseHandler.successParser = object: UUHttpStreamParser
+        /*request.responseHandler.successParser = object: UUHttpStreamParser
         {
             override fun parse(stream: InputStream, response: HttpURLConnection): Any?
             {
                 return UUJson.fromStream(stream, Array<TestModel>::class.java)
             }
-        }
+        }*/
+
+        request.responseHandler = UUTypedResponseHandler<Array<TestModel>, Void>(Array<TestModel>::class.java, Void::class.java)
 
         val session = UUHttpSession()
 
@@ -152,13 +172,15 @@ class UUHttpSessionTests
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(model)
 
-        request.responseHandler.successParser = object: UUHttpStreamParser
-        {
-            override fun parse(stream: InputStream, response: HttpURLConnection): Any?
-            {
-                return UUJson.fromStream(stream, TestModel::class.java)
-            }
-        }
+//        request.responseHandler.successParser = object: UUHttpStreamParser
+//        {
+//            override fun parse(stream: InputStream, response: HttpURLConnection): Any?
+//            {
+//                return UUJson.fromStream(stream, TestModel::class.java)
+//            }
+//        }
+
+        request.responseHandler = UUTypedResponseHandler<TestModel, Void>(TestModel::class.java, Void::class.java)
 
         val session = UUHttpSession()
 
@@ -168,6 +190,61 @@ class UUHttpSessionTests
         val success = UUAssert.unwrap(response.parsedResponse)
         assert(success is TestModel)
         UULog.d(javaClass, "test_0002_simple_echo_post", "Success: $success")
+    }
+
+    @Test
+    fun test_0003_get_object()
+    {
+        val uri = UUHttpUri("https://spsw.io/uu/get_object.php")
+        val request = UUHttpRequest(uri)
+        val session = UUHttpSession()
+        session.logResponses = true
+
+        val response = doRequest(session, request)
+        Assert.assertNull(response.error)
+
+        val success = UUAssert.unwrap(response.parsedResponse)
+        assert(success is ByteArray)
+        val bytes = UUAssert.unwrap(success as? ByteArray)
+        UULog.d(javaClass, "test_0003_get_object", "Success: ${bytes.uuUtf8().getOrNull()}")
+    }
+
+    @Test
+    fun test_0004_get_object_gzip()
+    {
+        val uri = UUHttpUri("https://spsw.io/uu/get_object.php")
+        val request = UUHttpRequest(uri)
+        request.headers.put(UUHttpHeader.AcceptEncoding, "gzip")
+
+        val session = UUHttpSession()
+        session.logResponses = true
+
+        val response = doRequest(session, request)
+        Assert.assertNull(response.error)
+
+        val success = UUAssert.unwrap(response.parsedResponse)
+        assert(success is ByteArray)
+        val bytes = UUAssert.unwrap(success as? ByteArray)
+        UULog.d(javaClass, "test_0004_get_object_gzip", "Success: ${bytes.uuUtf8().getOrNull()}")
+    }
+
+    @Test
+    fun test_0005_get_object_deflate()
+    {
+        val uri = UUHttpUri("https://spsw.io/uu/get_object.php")
+        val request = UUHttpRequest(uri)
+        request.headers.put(UUHttpHeader.AcceptEncoding, "deflate")
+
+        val session = UUHttpSession()
+        session.logResponses = true
+
+        val response = doRequest(session, request)
+        Assert.assertNull(response.error)
+
+        val success = UUAssert.unwrap(response.parsedResponse)
+        assert(success is ByteArray)
+        val bytes = UUAssert.unwrap(success as? ByteArray)
+        UULog.d(javaClass, "test_0005_get_object_deflate", "Success: ${bytes.uuUtf8().getOrNull()}")
     }
 
     @OptIn(ExperimentalAtomicApi::class)

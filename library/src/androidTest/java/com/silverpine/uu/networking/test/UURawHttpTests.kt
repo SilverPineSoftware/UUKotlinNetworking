@@ -97,9 +97,11 @@ class UURawHttpTests
 
         val session = UUHttpSession()
 
-        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
-            UUJson.fromStream(stream, Array<TestModel>::class.java)
-        }
+//        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
+//            UUJson.fromStream(stream, Array<TestModel>::class.java)
+//        }
+
+        //request.responseHandler = U
 
         val latch = CountDownLatch(1)
 
@@ -133,9 +135,9 @@ class UURawHttpTests
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(model)
 
-        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
-            UUJson.fromStream(stream, TestModel::class.java)
-        }
+//        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
+//            UUJson.fromStream(stream, TestModel::class.java)
+//        }
 
         val latch = CountDownLatch(1)
 
@@ -163,13 +165,13 @@ class UURawHttpTests
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.GET
 
-        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
+        /*request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
 
             val applicationContext = InstrumentationRegistry.getInstrumentation().targetContext
             val outputFolder = Paths.get("${applicationContext.noBackupFilesDir}/uu2")
             stream.uuUnzip(outputFolder)
             outputFolder
-        }
+        }*/
 
         val latch = CountDownLatch(1)
 

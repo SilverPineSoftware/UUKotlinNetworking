@@ -88,3 +88,4 @@ lint/tmp/
 /.idea/misc.xml
 .DS_Store
 /.idea/inspectionProfiles
+/.idea/deploymentTargetSelector.xml

@@ -24,6 +24,19 @@ open class UUBinaryStreamParser: UUHttpStreamParser
     }
 }
 
+class UUTextResponseParser: UUHttpStreamParser
+{
+    override fun parse(stream: InputStream, response: HttpURLConnection): Any?
+    {
+        //response.contentType
+        //response.contentEncoding
+
+        // Encoding and Charset
+        val bytes = stream.uuReadAll() ?: return null
+        return String(bytes)
+    }
+}
+
 open class UUTypedStreamParser<DataType: Any>(private val objectClass: Class<DataType>): UUHttpStreamParser
 {
     override fun parse(

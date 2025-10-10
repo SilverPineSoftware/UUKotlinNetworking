@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import java.io.BufferedOutputStream
 import java.io.OutputStream
 import java.net.HttpURLConnection
+import java.util.zip.GZIPInputStream
+import java.util.zip.InflaterInputStream
 
 open class UUHttpSession
 {
@@ -136,7 +138,7 @@ open class UUHttpSession
         try
         {
 
-            val readStream = if (urlConnection.responseCode.uuIsHttpSuccess())
+            var readStream = if (urlConnection.responseCode.uuIsHttpSuccess())
             {
                 urlConnection.inputStream
             }
@@ -145,19 +147,16 @@ open class UUHttpSession
                 urlConnection.errorStream
             }
 
-            /*val responseBytes = readStream.uuReadAll()
-            if (responseBytes == null)
+            when (urlConnection.contentEncoding?.lowercase())
             {
-                return UUHttpResponse(
-                    request = request,
-                    response = urlConnection
-                )
-            }*/
-
-            if (logResponses)
-            {
-                //UULog.d(javaClass, "downloadResponse", "ResponseBody: ${responseBytes.uuUtf8().getOrNull()}")
+                "gzip" -> readStream = GZIPInputStream(readStream)
+                "deflate" -> readStream = InflaterInputStream(readStream)
             }
+
+            /*if (logResponses)
+            {
+                UULog.d(javaClass, "downloadResponse", "ResponseBody: ${readStream.uuReadAll()?.uuUtf8()?.getOrNull()}")
+            }*/
 
             return request.responseHandler.handleResponse(request, urlConnection, readStream)
         }

@@ -29,11 +29,11 @@ class UUJsonBody<T: Any>(private val jsonObject: T): UUHttpBody(UUContentType.AP
 
 fun UUHttpBody.uuSetHeaders(headers: UUHttpHeaders, requestBodyLength: Int)
 {
-    headers.putSingle("Content-Type", contentType)
-    headers.putSingle("Content-Length", "$requestBodyLength")
+    headers.put(UUHttpHeader.ContentType, contentType)
+    headers.put(UUHttpHeader.ContentLength, "$requestBodyLength")
 
     contentEncoding?.let()
     { contentEncoding ->
-        headers.putSingle("Content-Encoding", contentEncoding)
+        headers.put(UUHttpHeader.AcceptEncoding, contentEncoding)
     }
 }

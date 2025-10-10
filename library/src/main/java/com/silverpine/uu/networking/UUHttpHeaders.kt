@@ -5,7 +5,10 @@ import java.net.URLConnection
 
 enum class UUHttpHeader(val key: String)
 {
-    AcceptEncoding("Accept-Encoding")
+    AcceptEncoding("Accept-Encoding"),
+    ContentType("Content-Type"),
+    ContentLength("Content-Length"),
+    ContentEncoding("Content-Encoding"),
 }
 
 fun URLConnection.uuPutHeader(header: UUHttpHeader, value: String)
@@ -23,6 +26,11 @@ class UUHttpHeaders(other: Map<String, List<String>> = mapOf()): HashMap<String,
     fun putSingle(key: String, value: String)
     {
         this[key] = listOf(value)
+    }
+
+    fun put(header: UUHttpHeader, value: String)
+    {
+        putSingle(header.key, value)
     }
 
     fun log(method: String, tag: String)
