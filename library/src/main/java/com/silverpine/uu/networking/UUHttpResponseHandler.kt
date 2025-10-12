@@ -10,7 +10,7 @@ interface UUHttpResponseHandler
 {
     suspend fun handleResponse(
         request: UUHttpRequest,
-        response: HttpURLConnection,
+        urlConnection: HttpURLConnection,
     ): UUHttpResponse
 
     val successParser: UUHttpStreamParser

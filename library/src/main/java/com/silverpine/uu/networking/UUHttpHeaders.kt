@@ -9,6 +9,7 @@ enum class UUHttpHeader(val key: String)
     ContentType("Content-Type"),
     ContentLength("Content-Length"),
     ContentEncoding("Content-Encoding"),
+    Authorization("Authorization")
 }
 
 fun URLConnection.uuPutHeader(header: UUHttpHeader, value: String)

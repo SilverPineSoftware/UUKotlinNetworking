@@ -3,13 +3,17 @@ package com.silverpine.uu.networking
 import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUObjectBlock
 import com.silverpine.uu.core.uuDispatch
+import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
 
 open class UURemoteApi(
-    var session: UUHttpSession
+    var session: UUHttpSession,
 )
 {
     private var isAuthorizingFlag: Boolean = false
     private var authorizeListeners: ArrayList<(Boolean, UUError?)->Unit> = arrayListOf()
+
+    // AuthorizationProvider used if none is specified on a request
+    var defaultAuthorizationProvider: UUHttpAuthorizationProvider? = null
 
     fun executeAuthorizedRequest(
         request: UUHttpRequest,
@@ -72,6 +76,11 @@ open class UURemoteApi(
         request: UUHttpRequest,
         completion: UUObjectBlock<UUHttpResponse>)
     {
+        if (request.authorizationProvider == null)
+        {
+            request.authorizationProvider = defaultAuthorizationProvider
+        }
+
         request.authorizationProvider?.attachAuthorization(request.headers)
         executeRequest(request, completion)
     }

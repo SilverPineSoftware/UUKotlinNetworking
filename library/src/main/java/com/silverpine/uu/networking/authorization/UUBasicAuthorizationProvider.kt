@@ -2,23 +2,23 @@ package com.silverpine.uu.networking.authorization
 
 import com.silverpine.uu.core.uuAsciiByteArray
 import com.silverpine.uu.core.uuBase64
-import com.silverpine.uu.networking.UUHttpHeaders
 
-interface UUBasicAuthorizationProvider: UUHttpAuthorizationProvider
+open class UUBasicAuthorizationProvider(
+    var userName: String?,
+    var password: String?
+): UUHttpAuthorizationProvider("Basic", null)
 {
-    val userName: String?
-    val password: String?
-
-    override fun attachAuthorization(headers: UUHttpHeaders)
+    override fun formatAuthorization(): String?
     {
-        val user = userName ?: return
-        val pwd = password ?: return
+        val user = userName ?: return null
+        val pwd = password ?: return null
 
         if (user.isNotEmpty() && pwd.isNotEmpty())
         {
-            val authorizationData = "$user:$pwd".uuAsciiByteArray() ?: return
-            val authStringBase64 = authorizationData.uuBase64()
-            headers.putSingle("Authorization", "Basic $authStringBase64")
+            val authorizationData = "$user:$pwd".uuAsciiByteArray() ?: return null
+            return authorizationData.uuBase64().getOrNull()
         }
+
+        return null
     }
 }

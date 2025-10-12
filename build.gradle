@@ -26,8 +26,8 @@ plugins {
     id 'org.jetbrains.kotlin.android' version "${uu_kotlin_version}" apply false
     id 'io.github.gradle-nexus.publish-plugin' version "${uu_nexus_version}" apply true
     id 'org.jetbrains.kotlin.plugin.serialization' version "${uu_kotlin_version}" apply true
+    id 'org.jetbrains.kotlin.plugin.compose' version "${uu_kotlin_version}" apply false
 }
 
 apply from: "${uu_build_common}/uu-publish-common.gradle"
-
 
