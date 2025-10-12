@@ -1,4 +1,4 @@
-package com.silverpine.uu.sample.networking
+package com.silverpine.uu.sample.networking.openai
 
 import androidx.annotation.Keep
 import com.silverpine.uu.core.UUError
@@ -14,9 +14,17 @@ import com.silverpine.uu.networking.authorization.UUTokenAuthorizationProvider
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-class OpenAiApi(sdkKey: String): UURemoteApi(UUHttpSession())
+class OpenAiApi: UURemoteApi(UUHttpSession())
 {
     private val baseUrl = "https://api.openai.com/v1"
+
+    var sdkKey: String = "--insert-real-api-key-here--"
+        set(value)
+        {
+            defaultAuthorizationProvider = UUTokenAuthorizationProvider(value)
+        }
+
+    var model: String = "o3"
 
     init
     {
@@ -28,7 +36,7 @@ class OpenAiApi(sdkKey: String): UURemoteApi(UUHttpSession())
         completion: UUResultBlock<String>
     )
     {
-        val body = OpenAiQuestion(model = "gpt-4.1-mini", input = input)
+        val body = OpenAiQuestion(model = model, input = input)
         val request = buildRequest()
         request.body = UUJsonBody(body)
 

@@ -1,6 +1,6 @@
 package com.silverpine.uu.networking
 
-import com.silverpine.uu.core.uuToBase64Bytes
+import com.silverpine.uu.core.uuFromBase64
 import com.silverpine.uu.logging.UULog
 import java.io.ByteArrayInputStream
 import java.security.KeyFactory
@@ -41,8 +41,8 @@ open class UUClientCertSocketFactory
         val certPart = plainTextPemCert.uuTextBetween(BEGIN_CERT, END_CERT) ?: return null
         val privateKeyPart = plainTextPemCert.uuTextBetween(BEGIN_PRIVATE_KEY, END_PRIVATE_KEY) ?: return null
 
-        val certBytes = certPart.uuToBase64Bytes() ?: return null
-        val privateKeyBytes = privateKeyPart.uuToBase64Bytes() ?: return null
+        val certBytes = certPart.uuFromBase64().getOrNull() ?: return null
+        val privateKeyBytes = privateKeyPart.uuFromBase64().getOrNull() ?: return null
 
         val x509Certificate = getX509Cert(certBytes) ?: return null
         val key = getRSAPrivateKey(privateKeyBytes) ?: return null

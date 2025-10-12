@@ -1,98 +1,5 @@
 package com.silverpine.uu.sample.networking
 
-/*
-import android.os.Bundle
-import androidx.annotation.Keep
-import androidx.appcompat.app.AppCompatActivity
-import com.silverpine.uu.core.UUJson
-import com.silverpine.uu.core.UUKotlinXJsonProvider
-import com.silverpine.uu.core.UURandom
-import com.silverpine.uu.logging.UUConsoleLogger
-import com.silverpine.uu.logging.UULog
-import com.silverpine.uu.networking.UUHttpStreamParser
-import com.silverpine.uu.networking.UUHttpMethod
-import com.silverpine.uu.networking.UUHttpRequest
-import com.silverpine.uu.networking.UUHttpResponse
-import com.silverpine.uu.networking.UUHttpSession
-import com.silverpine.uu.networking.UUHttpUri
-import com.silverpine.uu.networking.UUJsonBody
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonNamingStrategy
-
-class MainActivity : AppCompatActivity()
-{
-    @OptIn(ExperimentalSerializationApi::class)
-    override fun onCreate(savedInstanceState: Bundle?)
-    {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        UULog.init(UUConsoleLogger())
-
-        UUJson.init(
-            UUKotlinXJsonProvider(Json()
-            {
-                ignoreUnknownKeys = true
-                namingStrategy = JsonNamingStrategy.SnakeCase
-                explicitNulls = false
-                encodeDefaults = true
-                isLenient = true
-            })
-        )
-
-        test_0001_simple_echo_post()
-    }
-
-    fun test_0001_simple_echo_post()
-    {
-        val uri = UUHttpUri("https://spsw.io/uu/echo_json_post.php")
-
-        val model = TestModel()
-        model.id = UURandom.uuid()
-        model.name = "hello"
-        model.level = UURandom.uByte().toInt()
-        model.xp = UURandom.uShort().toInt()
-
-        val body = UUJsonBody(model)
-        val request = UUHttpRequest(uri)
-        request.method = UUHttpMethod.POST
-        request.body = body
-
-        request.responseHandler.successParser = UUHttpStreamParser { stream, response ->
-            UUJson.fromStream(stream, TestModel::class.java)
-        }
-
-        //val latch = CountDownLatch(1)
-
-        var response: UUHttpResponse? = null
-        val session = UUHttpSession()
-        session.executeRequest(request)
-        {
-            response = it
-            //latch.countDown()
-        }
-
-        //latch.await()
-
-//        Assert.assertNotNull(response)
-//        Assert.assertNotNull(response?.parsedResponse)
-//        Assert.assertTrue(response?.parsedResponse is TestModel)
-    }
-}
-
-@Keep
-@Serializable
-class TestModel()
-{
-    var id: String = ""
-    var name: String = ""
-    var level: Int = 0
-    var xp: Int = 0
-}*/
-
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -110,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -118,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,26 +37,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.silverpine.uu.core.UUJson
-import com.silverpine.uu.core.UUKotlinXJsonProvider
-import com.silverpine.uu.logging.UUConsoleLogger
-import com.silverpine.uu.logging.UULog
+import com.silverpine.uu.sample.networking.openai.OpenAiScreen
+import com.silverpine.uu.sample.networking.openai.OpenAiSettingsScreen
+import com.silverpine.uu.sample.networking.openai.SettingsRepository
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 
 class MainActivity : ComponentActivity()
 {
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
-
-        UULog.init(UUConsoleLogger())
-
-        UUJson.init(
-            UUKotlinXJsonProvider(Json()
-            {
-                ignoreUnknownKeys = true
-            }))
 
         setContent {
             MaterialTheme {
@@ -157,7 +56,6 @@ class MainActivity : ComponentActivity()
     }
 }
 
-// Define the screens
 sealed class AppScreen(val label: String, val icon: ImageVector)
 {
     object Home : AppScreen("Home", Icons.Default.Home)
@@ -167,13 +65,22 @@ sealed class AppScreen(val label: String, val icon: ImageVector)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen()
+{
+    val repository = remember { SettingsRepository() }
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    //var showSettings by remember { mutableStateOf(false) }
+    //val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Home) }
 
     val drawerItems = listOf(AppScreen.Home, AppScreen.Settings, AppScreen.OpenAi)
+
+    // State that controls whether the OpenAI settings sheet should be visible
+    var showOpenAiSettings by remember { mutableStateOf(false) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -203,17 +110,62 @@ fun MainScreen() {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
+                    },
+                    actions = {
+                        when (currentScreen)
+                        {
+                            is AppScreen.Home -> {
+                                /*IconButton(onClick = { /* do something */ }) {
+                                    Icon(Icons.Default.Settings, contentDescription = "Home action")
+                                }*/
+                            }
+                            is AppScreen.Settings -> {
+                                /*IconButton(onClick = { /* do something */ }) {
+                                    Icon(Icons.Default.Home, contentDescription = "Settings action")
+                                }*/
+                            }
+                            is AppScreen.OpenAi -> {
+                                IconButton(onClick = {
+                                    showOpenAiSettings = true
+                                })
+                                {
+                                    Icon(Icons.Default.Settings, contentDescription = "Open AI Settings")
+                                }
+                            }
+                        }
                     }
                 )
             }
         ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                when (currentScreen) {
+            Box(modifier = Modifier.padding(innerPadding))
+            {
+                when (currentScreen)
+                {
                     is AppScreen.Home -> HomeScreen()
                     is AppScreen.Settings -> SettingsScreen()
-                    is AppScreen.OpenAi -> OpenAiScreen()
+                    is AppScreen.OpenAi -> OpenAiScreen(
+                        repository = repository,
+                        showSettings = showOpenAiSettings,
+                        onSettingsDismissed = { showOpenAiSettings = false }
+                    )
                 }
             }
+
+            /*if (showSettings)
+            {
+                ModalBottomSheet(
+                    onDismissRequest = { showSettings = false },
+                    sheetState = sheetState
+                ) {
+                    OpenAiSettingsScreen(
+                        repository = repository,
+                        onClose = {
+                            scope.launch { sheetState.hide() }
+                                .invokeOnCompletion { showSettings = false }
+                        }
+                    )
+                }
+            }*/
         }
     }
 }
