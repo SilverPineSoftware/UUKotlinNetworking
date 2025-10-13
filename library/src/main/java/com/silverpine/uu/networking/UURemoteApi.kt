@@ -6,7 +6,7 @@ import com.silverpine.uu.core.uuDispatch
 import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
 
 open class UURemoteApi(
-    var session: UUHttpSession,
+    var session: UUHttpSession = UUHttpSession(),
 )
 {
     private var isAuthorizingFlag: Boolean = false
