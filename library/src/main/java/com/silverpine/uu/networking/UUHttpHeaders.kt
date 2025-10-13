@@ -17,6 +17,16 @@ fun URLConnection.uuPutHeader(header: UUHttpHeader, value: String)
     setRequestProperty(header.key, value)
 }
 
+fun URLConnection.uuSetHeaders(headers: UUHttpHeaders)
+{
+    headers.log("uuSetHeaders", "RequestHeaders")
+
+    headers.forEach()
+    { key, value ->
+        setRequestProperty(key, value.joinToString(","))
+    }
+}
+
 class UUHttpHeaders(other: Map<String, List<String>> = mapOf()): HashMap<String, List<String>>(other)
 {
     fun getSingle(key: String): String?
