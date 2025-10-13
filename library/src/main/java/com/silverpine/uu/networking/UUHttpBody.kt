@@ -3,7 +3,6 @@ package com.silverpine.uu.networking
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.uuUtf8ByteArray
-import com.silverpine.uu.logging.UULog
 
 open class UUHttpBody(var contentType: String, var contentEncoding: String? = null)
 {
@@ -43,7 +42,6 @@ open class UUHttpBody(var contentType: String, var contentEncoding: String? = nu
         }
         catch (ex: Exception)
         {
-            UULog.d(javaClass, "prepareToSend", "", ex)
             return UUResult.failure(UUHttpError.fromException(UUHttpErrorCode.SERIALIZE_FAILURE, ex))
         }
     }

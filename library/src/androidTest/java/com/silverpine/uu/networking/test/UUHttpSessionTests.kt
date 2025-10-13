@@ -11,6 +11,8 @@ import com.silverpine.uu.core.uuUtf8
 import com.silverpine.uu.logging.UUConsoleLogger
 import com.silverpine.uu.logging.UULog
 import com.silverpine.uu.networking.UUHttpHeader
+import com.silverpine.uu.networking.UUHttpLogging
+import com.silverpine.uu.networking.UUHttpLoggingMode
 import com.silverpine.uu.networking.UUHttpMethod
 import com.silverpine.uu.networking.UUHttpRequest
 import com.silverpine.uu.networking.UUHttpResponse
@@ -35,6 +37,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.test.assertEquals
 
 @Keep
 @Serializable
@@ -129,6 +132,7 @@ class UUHttpSessionTests
 
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.GET
+        request.loggingMode = UUHttpLoggingMode.Verbose
 
         val count = 3
         request.headers.putSingle("uu-return-object-count", "$count")
@@ -159,14 +163,7 @@ class UUHttpSessionTests
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(model)
-
-//        request.responseHandler.successParser = object: UUHttpStreamParser
-//        {
-//            override fun parse(stream: InputStream, response: HttpURLConnection): Any?
-//            {
-//                return UUJson.fromStream(stream, TestModel::class.java)
-//            }
-//        }
+        request.loggingMode = UUHttpLoggingMode.Verbose
 
         request.responseHandler = UUTypedResponseHandler<TestModel, Void>(TestModel::class.java, Void::class.java)
 
@@ -185,6 +182,7 @@ class UUHttpSessionTests
     {
         val uri = UUHttpUri("https://spsw.io/uu/get_object.php")
         val request = UUHttpRequest(uri)
+        request.loggingMode = UUHttpLoggingMode.Verbose
         val session = UUHttpSession()
 
         val response = doRequest(session, request)
@@ -202,6 +200,7 @@ class UUHttpSessionTests
         val uri = UUHttpUri("https://spsw.io/uu/get_object.php")
         val request = UUHttpRequest(uri)
         request.headers.put(UUHttpHeader.AcceptEncoding, "gzip")
+        request.loggingMode = UUHttpLoggingMode.Verbose
 
         val session = UUHttpSession()
 
@@ -220,6 +219,7 @@ class UUHttpSessionTests
         val uri = UUHttpUri("https://spsw.io/uu/get_object.php")
         val request = UUHttpRequest(uri)
         request.headers.put(UUHttpHeader.AcceptEncoding, "deflate")
+        request.loggingMode = UUHttpLoggingMode.Verbose
 
         val session = UUHttpSession()
 
@@ -230,6 +230,25 @@ class UUHttpSessionTests
         assert(success is ByteArray)
         val bytes = UUAssert.unwrap(success as? ByteArray)
         UULog.d(javaClass, "test_0005_get_object_deflate", "Success: ${bytes.uuUtf8().getOrNull()}")
+    }
+
+    @Test
+    fun test_0005_get_with_error()
+    {
+        val uri = UUHttpUri("https://spsw.io/uu/echo_json.php?error=Failed&errorMessage=RequestFailed")
+        val request = UUHttpRequest(uri)
+        request.headers.putSingle("uu-status-code", "400")
+        request.loggingMode = UUHttpLoggingMode.Verbose
+        val session = UUHttpSession()
+
+        val response = doRequest(session, request)
+        Assert.assertNotNull(response.error)
+        assertEquals(400, response.httpStatusCode)
+
+        val success = UUAssert.unwrap(response.parsedResponse)
+        assert(success is ByteArray)
+        val bytes = UUAssert.unwrap(success as? ByteArray)
+        UULog.d(javaClass, "test_0005_get_with_error", "Error: ${bytes.uuUtf8().getOrNull()}")
     }
 
     @OptIn(ExperimentalAtomicApi::class)

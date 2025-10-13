@@ -29,11 +29,11 @@ class UUHttpHeaders(other: Map<String, List<String>> = mapOf()): HashMap<String,
         putSingle(header.key, value)
     }
 
-    fun log(method: String, tag: String)
-    {
-        forEach()
-        { key: String?, values: List<String>? ->
-            UULog.d(javaClass, method, "$tag: $key=${values?.joinToString(",")}")
-        }
-    }
+//    fun log(method: String, tag: String)
+//    {
+//        forEach()
+//        { key: String?, values: List<String>? ->
+//            UULog.d(javaClass, method, "$tag: $key=${values?.joinToString(",")}")
+//        }
+//    }
 }

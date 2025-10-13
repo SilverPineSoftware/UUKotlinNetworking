@@ -1,13 +1,11 @@
 package com.silverpine.uu.networking
 
-import com.silverpine.uu.core.UUResult
-import com.silverpine.uu.logging.UULog
+import com.silverpine.uu.core.uuFormatAsRfc3339
 import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
 import java.net.CookieHandler
-import java.net.HttpURLConnection
 import java.net.Proxy
+import java.util.UUID
 import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLSocketFactory
 
 open class UUHttpRequest(
@@ -25,80 +23,40 @@ open class UUHttpRequest(
     var socketFactory: SSLSocketFactory? = null,
     var hostNameVerifier: HostnameVerifier? = null,
     var authorizationProvider: UUHttpAuthorizationProvider? = null,
-    var responseHandler: UUHttpResponseHandler = UUBaseResponseHandler())
+    var responseHandler: UUHttpResponseHandler = UUBaseResponseHandler(),
+    var loggingMode: Array<UUHttpLoggingMode> = UUHttpLoggingMode.Info
+)
 {
+    enum class State
+    {
+        Idle,
+        OpenConnection,
+        PrepareToSend,
+        WriteRequest,
+        PrepareToReceive,
+        HandleResponse,
+        Complete
+    }
+
+    val id = UUID.randomUUID().toString()
+
     var startTime: Long = 0
     var endTime: Long = 0
+    var state: State = State.Idle
 
     fun start()
     {
         startTime = System.currentTimeMillis()
+        UUHttpLogging.log(UUHttpLoggingMode.Request, this, "StartTime: ${startTime.uuFormatAsRfc3339()}")
     }
 
     fun end()
     {
         endTime = System.currentTimeMillis()
-    }
+        UUHttpLogging.log(UUHttpLoggingMode.Response, this, "EndTime: ${endTime.uuFormatAsRfc3339()}")
 
-    internal open fun openConnection(): UUResult<HttpURLConnection>
-    {
-        var result: UUResult<HttpURLConnection>? = null
-
-        try
-        {
-            val url = uri.fullUrl
-
-            var urlConnection = if (proxy != null)
-            {
-                url.openConnection(proxy) as? HttpURLConnection
-            }
-            else
-            {
-                url.openConnection() as? HttpURLConnection
-            }
-
-            if (urlConnection == null)
-            {
-                return UUResult.failure(UUHttpError.create(UUHttpErrorCode.OpenConnectionFailure))
-            }
-
-            urlConnection.useCaches = useCaches
-            urlConnection.defaultUseCaches = defaultUseCaches
-            urlConnection.instanceFollowRedirects = instanceFollowRedirects
-
-            CookieHandler.setDefault(cookieHandler)
-
-            urlConnection.connectTimeout = connectTimeout
-            urlConnection.readTimeout = readTimeout
-
-            if (urlConnection is HttpsURLConnection)
-            {
-                socketFactory?.let()
-                {
-                    urlConnection.sslSocketFactory = it
-                }
-
-                hostNameVerifier?.let()
-                {
-                    urlConnection.hostnameVerifier = it
-                }
-            }
-
-            authorizationProvider?.attachAuthorization(this)
-
-            urlConnection.doInput = true
-            urlConnection.requestMethod = method.toString()
-
-            start()
-            result = UUResult.success(urlConnection)
-        }
-        catch (ex: Exception)
-        {
-            UULog.d(javaClass, "openConnection", "", ex)
-            result = UUResult.failure(UUHttpError.fromException(UUHttpErrorCode.OpenConnectionFailure, ex))
-        }
-
-        return result
+        val durationSeconds = (endTime - startTime).toDouble() / 1000
+        UUHttpLogging.log(UUHttpLoggingMode.Response, this, "Duration: $durationSeconds seconds")
     }
 }
 

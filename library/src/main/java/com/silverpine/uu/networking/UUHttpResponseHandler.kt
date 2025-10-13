@@ -1,7 +1,6 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUError
-import com.silverpine.uu.logging.UULog
 import java.net.HttpURLConnection
 import java.util.zip.GZIPInputStream
 import java.util.zip.InflaterInputStream
@@ -40,29 +39,16 @@ open class UUBaseResponseHandler() : UUHttpResponseHandler
                 "deflate" -> readStream = InflaterInputStream(readStream)
             }
 
-            /*if (logResponses)
-            {
-                UULog.d(javaClass, "downloadResponse", "ResponseBody: ${readStream.uuReadAll()?.uuUtf8()?.getOrNull()}")
-            }*/
+            val bufferedStream = readStream.buffered()
 
-            //return request.responseHandler.handleResponse(request, urlConnection, readStream)
+            UUHttpLogging.logResponse(request, bufferedStream)
 
-            val parser = if (isSuccess)
-            {
-                successParser
-            }
-            else
-            {
-                errorParser
-            }
-
-            val parsedResponse = parser.parse(readStream, urlConnection)
+            val parser = if (isSuccess) successParser else errorParser
+            val parsedResponse = parser.parse(bufferedStream, urlConnection)
             return finishHandleResponse(request, urlConnection, parsedResponse)
         }
         catch (ex: Exception)
         {
-            UULog.d(javaClass, "downloadResponse", "", ex)
-
             return UUHttpResponse(
                 request = request,
                 error = UUHttpError.fromException(UUHttpErrorCode.READ_FAILED, ex)

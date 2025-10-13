@@ -2,24 +2,30 @@ package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.uuSafeClose
-import com.silverpine.uu.core.uuUtf8
 import com.silverpine.uu.logging.UULog
 import java.io.BufferedOutputStream
 import java.io.OutputStream
 import java.net.HttpURLConnection
-
-fun HttpURLConnection.uuSetHeader(header: UUHttpHeader, value: String)
-{
-    setRequestProperty(header.key, value)
-}
+import java.net.Proxy
+import java.net.URL
 
 fun HttpURLConnection.uuSetHeaders(headers: UUHttpHeaders)
 {
-    headers.log("uuSetHeaders", "RequestHeaders")
-
     headers.forEach()
     { key, value ->
         setRequestProperty(key, value.joinToString(","))
+    }
+}
+
+fun URL.uuOpenConnection(proxy: Proxy? = null): HttpURLConnection?
+{
+    return if (proxy != null)
+    {
+        openConnection(proxy) as? HttpURLConnection
+    }
+    else
+    {
+        openConnection() as? HttpURLConnection
     }
 }
 
@@ -29,14 +35,12 @@ fun HttpURLConnection.uuWriteBody(body: ByteArray): UUError?
 
     try
     {
-        UULog.d(javaClass, "uuWriteBody", "RequestBody: ${body.uuUtf8().getOrNull()}")
         os = BufferedOutputStream(outputStream)
         os.write(body)
         os.flush()
     }
     catch (ex: Exception)
     {
-        UULog.d(javaClass, "uuWriteBody", "", ex)
         return UUHttpError.fromException(UUHttpErrorCode.WRITE_FAILED, ex)
     }
     finally
@@ -56,22 +60,5 @@ fun HttpURLConnection.uuSafeDisconnect()
     catch (ex: Exception)
     {
         UULog.d(javaClass, "uuSafeDisconnect", "", ex)
-    }
-}
-
-suspend fun HttpURLConnection.uuHandleResponse(request: UUHttpRequest): UUHttpResponse
-{
-    try
-    {
-        return request.responseHandler.handleResponse(request, this)
-    }
-    catch (ex: Exception)
-    {
-        UULog.d(javaClass, "uuHandleResponse", "", ex)
-
-        return UUHttpResponse(
-            request = request,
-            error = UUHttpError.fromException(UUHttpErrorCode.HandleResponseException, ex)
-        )
     }
 }
