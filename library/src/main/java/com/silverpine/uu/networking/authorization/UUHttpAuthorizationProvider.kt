@@ -1,7 +1,7 @@
 package com.silverpine.uu.networking.authorization
 
 import com.silverpine.uu.networking.UUHttpHeader
-import com.silverpine.uu.networking.UUHttpHeaders
+import com.silverpine.uu.networking.UUHttpRequest
 
 open class UUHttpAuthorizationProvider(
     var scheme: String,
@@ -13,12 +13,12 @@ open class UUHttpAuthorizationProvider(
         return authorization
     }
 
-    open fun attachAuthorization(headers: UUHttpHeaders)
+    open fun attachAuthorization(request: UUHttpRequest)
     {
         val t = formatAuthorization() ?: return
         if (t.isNotEmpty())
         {
-            headers.put(UUHttpHeader.Authorization, "$scheme $t")
+            request.headers.put(UUHttpHeader.Authorization, "$scheme $t")
         }
     }
 }
