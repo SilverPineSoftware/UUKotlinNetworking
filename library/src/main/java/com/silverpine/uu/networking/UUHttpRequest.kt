@@ -1,39 +1,43 @@
 package com.silverpine.uu.networking
 
-import com.silverpine.uu.core.UUDate
 import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.logging.UULog
 import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
+import java.net.CookieHandler
 import java.net.HttpURLConnection
 import java.net.Proxy
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLSocketFactory
 
-open class UUHttpRequest(var uri: UUHttpUri)
+open class UUHttpRequest(
+    var uri: UUHttpUri,
+    var method: UUHttpMethod = UUHttpMethod.GET,
+    var headers: UUHttpHeaders = UUHttpHeaders(),
+    var body: UUHttpBody? = null,
+    val useCaches: Boolean = false,
+    val defaultUseCaches: Boolean = false,
+    val instanceFollowRedirects: Boolean = true,
+    val cookieHandler: CookieHandler? = null,
+    val connectTimeout: Int = 60_000,
+    val readTimeout: Int = 60_000,
+    var proxy: Proxy? = null,
+    var socketFactory: SSLSocketFactory? = null,
+    var hostNameVerifier: HostnameVerifier? = null,
+    var authorizationProvider: UUHttpAuthorizationProvider? = null,
+    var responseHandler: UUHttpResponseHandler = UUBaseResponseHandler())
 {
-    var method: UUHttpMethod = UUHttpMethod.GET
-    var headers: UUHttpHeaders = UUHttpHeaders()
-    var body: UUHttpBody? = null
-    var timeout: Int = DEFAULT_TIMEOUT
-    var useGZipCompression: Boolean = true
-    var proxy: Proxy? = null
-    var socketFactory: SSLSocketFactory? = null
-    var hostNameVerifier: HostnameVerifier? = null
-    var authorizationProvider: UUHttpAuthorizationProvider? = null
-
-    var responseHandler: UUHttpResponseHandler = UUBaseResponseHandler()
-
-    companion object
-    {
-        var DEFAULT_TIMEOUT = (60 * UUDate.Constants.millisInOneSecond).toInt()
-    }
-
     var startTime: Long = 0
+    var endTime: Long = 0
 
     fun start()
     {
         startTime = System.currentTimeMillis()
+    }
+
+    fun end()
+    {
+        endTime = System.currentTimeMillis()
     }
 
     internal open fun openConnection(): UUResult<HttpURLConnection>
@@ -58,15 +62,14 @@ open class UUHttpRequest(var uri: UUHttpUri)
                 return UUResult.failure(UUHttpError.create(UUHttpErrorCode.OpenConnectionFailure))
             }
 
-            urlConnection.connectTimeout = timeout
-            urlConnection.readTimeout = timeout
-            urlConnection.doInput = true
-            urlConnection.requestMethod = method.toString()
+            urlConnection.useCaches = useCaches
+            urlConnection.defaultUseCaches = defaultUseCaches
+            urlConnection.instanceFollowRedirects = instanceFollowRedirects
 
-            if (useGZipCompression)
-            {
-                urlConnection.uuPutHeader(UUHttpHeader.AcceptEncoding, "gzip")
-            }
+            CookieHandler.setDefault(cookieHandler)
+
+            urlConnection.connectTimeout = connectTimeout
+            urlConnection.readTimeout = readTimeout
 
             if (urlConnection is HttpsURLConnection)
             {
@@ -80,6 +83,11 @@ open class UUHttpRequest(var uri: UUHttpUri)
                     urlConnection.hostnameVerifier = it
                 }
             }
+
+            authorizationProvider?.attachAuthorization(this)
+
+            urlConnection.doInput = true
+            urlConnection.requestMethod = method.toString()
 
             start()
             result = UUResult.success(urlConnection)

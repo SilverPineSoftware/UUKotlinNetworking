@@ -15,7 +15,6 @@ import com.silverpine.uu.networking.UUHttpMethod
 import com.silverpine.uu.networking.UUHttpRequest
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.UUHttpSession
-import com.silverpine.uu.networking.UUHttpStreamParser
 import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.UUTypedResponseHandler
@@ -32,8 +31,6 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import java.io.InputStream
-import java.net.HttpURLConnection
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicReference
@@ -115,7 +112,6 @@ class UUHttpSessionTests
         val uri = UUHttpUri("https://spsw.io/uu/echo_json.php")
         val request = UUHttpRequest(uri)
         val session = UUHttpSession()
-        session.logResponses = true
 
         val response = doRequest(session, request)
         Assert.assertNull(response.error)
@@ -190,7 +186,6 @@ class UUHttpSessionTests
         val uri = UUHttpUri("https://spsw.io/uu/get_object.php")
         val request = UUHttpRequest(uri)
         val session = UUHttpSession()
-        session.logResponses = true
 
         val response = doRequest(session, request)
         Assert.assertNull(response.error)
@@ -209,7 +204,6 @@ class UUHttpSessionTests
         request.headers.put(UUHttpHeader.AcceptEncoding, "gzip")
 
         val session = UUHttpSession()
-        session.logResponses = true
 
         val response = doRequest(session, request)
         Assert.assertNull(response.error)
@@ -228,7 +222,6 @@ class UUHttpSessionTests
         request.headers.put(UUHttpHeader.AcceptEncoding, "deflate")
 
         val session = UUHttpSession()
-        session.logResponses = true
 
         val response = doRequest(session, request)
         Assert.assertNull(response.error)
@@ -244,7 +237,6 @@ class UUHttpSessionTests
     {
         val latch = CountDownLatch(1)
         val responseContainer = AtomicReference<UUHttpResponse?>(null)
-        session.logResponses = true
 
         session.executeRequest(request)
         { response ->

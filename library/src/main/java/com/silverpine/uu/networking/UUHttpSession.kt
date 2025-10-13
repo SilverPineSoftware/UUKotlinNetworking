@@ -23,8 +23,6 @@ open class UUHttpSession
         }
     }
 
-    var logResponses: Boolean = false
-
     open fun cancelAll()
     {
     }
@@ -44,7 +42,7 @@ open class UUHttpSession
             }
 
             UULog.d(javaClass, "executeRequest", "${request.method} ${urlConnection.url} ")
-            UULog.d(javaClass, "executeRequest", "Timeout: ${request.timeout}")
+            //UULog.d(javaClass, "executeRequest", "Timeout: ${request.timeout}")
 
             val serializedBody = request.serializeBody().getOrElse()
             { error ->

@@ -107,7 +107,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
 {
     init
     {
-        session.logResponses = true
+        //session.logResponses = true
     }
 
     override fun getObject(echo: TestApiObject?, completion: UUResultBlock<TestApiObject>)
