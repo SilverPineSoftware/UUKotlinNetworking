@@ -100,61 +100,6 @@ open class UUHttpRequest(
 
         return result
     }
-
-    open fun serializeBody(): UUResult<ByteArray?>
-    {
-        try
-        {
-            val actualBody = body ?: run()
-            {
-                return UUResult.success(null)
-            }
-
-            val encodedBody = actualBody.encodeBody() ?: run()
-            {
-                return UUResult.failure(UUHttpError.create(UUHttpErrorCode.SERIALIZE_FAILURE))
-            }
-
-            val encodedBodyLength = encodedBody.size
-            if (encodedBodyLength > 0)
-            {
-                actualBody.uuSetHeaders(headers, encodedBodyLength)
-                return UUResult.success(encodedBody)
-            }
-            else
-            {
-                // No exceptions thrown but a non-null UUHttpBody object should result in a
-                // non null payload
-                return UUResult.failure(UUHttpError.create(UUHttpErrorCode.SERIALIZE_FAILURE))
-            }
-        }
-        catch (ex: Exception)
-        {
-            UULog.d(javaClass, "serializeBody", "", ex)
-            return UUResult.failure(UUHttpError.fromException(UUHttpErrorCode.SERIALIZE_FAILURE, ex))
-        }
-    }
-
-    open fun applyHeaders(connection: HttpURLConnection)
-    {
-        headers.log("applyHeaders", "RequestHeaders")
-
-        headers.forEach()
-        { key, value ->
-            connection.setRequestProperty(key, value.joinToString(","))
-        }
-    }
-}
-
-open class UUTypedHttpRequest<SuccessType: Any, ErrorType: Any>(uri: UUHttpUri,
-                                                                successClass: Class<SuccessType>,
-                                                                errorClass: Class<ErrorType>,
-    ):  UUHttpRequest(uri)
-{
-    init
-    {
-        responseHandler = UUTypedResponseHandler<SuccessType, ErrorType>(successClass, errorClass)
-    }
 }
 
 

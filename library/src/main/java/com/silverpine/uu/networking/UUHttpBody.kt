@@ -1,7 +1,9 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUJson
+import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.uuUtf8ByteArray
+import com.silverpine.uu.logging.UULog
 
 open class UUHttpBody(var contentType: String, var contentEncoding: String? = null)
 {
@@ -12,28 +14,60 @@ open class UUHttpBody(var contentType: String, var contentEncoding: String? = nu
         this.content = content
     }
 
-    open fun encodeBody(): ByteArray?
+    open fun encode(): ByteArray?
     {
         return content
+    }
+
+    open fun prepareToSend(): UUResult<Pair<ByteArray, UUHttpHeaders>?>
+    {
+        try
+        {
+            val encodedBody = encode() ?: run()
+            {
+                return UUResult.failure(UUHttpError.create(UUHttpErrorCode.SERIALIZE_FAILURE))
+            }
+
+            val encodedBodyLength = encodedBody.size
+            if (encodedBodyLength > 0)
+            {
+                val headers = buildHeaders(encodedBodyLength)
+                return UUResult.success(Pair(encodedBody, headers))
+            }
+            else
+            {
+                // No exceptions thrown but a non-null UUHttpBody object should result in a
+                // non null payload
+                return UUResult.failure(UUHttpError.create(UUHttpErrorCode.SERIALIZE_FAILURE))
+            }
+        }
+        catch (ex: Exception)
+        {
+            UULog.d(javaClass, "prepareToSend", "", ex)
+            return UUResult.failure(UUHttpError.fromException(UUHttpErrorCode.SERIALIZE_FAILURE, ex))
+        }
+    }
+
+    open fun buildHeaders(contentLength: Int): UUHttpHeaders
+    {
+        val headers = UUHttpHeaders()
+        headers.put(UUHttpHeader.ContentType, contentType)
+        headers.put(UUHttpHeader.ContentLength, "$contentLength")
+
+        contentEncoding?.let()
+        { contentEncoding ->
+            headers.put(UUHttpHeader.ContentEncoding, contentEncoding)
+        }
+
+        return headers
     }
 }
 
 class UUJsonBody<T: Any>(private val jsonObject: T): UUHttpBody(UUContentType.APPLICATION_JSON)
 {
-    override fun encodeBody(): ByteArray?
+    override fun encode(): ByteArray?
     {
         val json = UUJson.toJson(jsonObject, jsonObject.javaClass)
         return json?.uuUtf8ByteArray()
-    }
-}
-
-fun UUHttpBody.uuSetHeaders(headers: UUHttpHeaders, requestBodyLength: Int)
-{
-    headers.put(UUHttpHeader.ContentType, contentType)
-    headers.put(UUHttpHeader.ContentLength, "$requestBodyLength")
-
-    contentEncoding?.let()
-    { contentEncoding ->
-        headers.put(UUHttpHeader.AcceptEncoding, contentEncoding)
     }
 }

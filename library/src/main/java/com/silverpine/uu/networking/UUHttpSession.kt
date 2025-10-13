@@ -1,15 +1,10 @@
 package com.silverpine.uu.networking
 
-import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUObjectBlock
-import com.silverpine.uu.core.uuSafeClose
-import com.silverpine.uu.core.uuUtf8
 import com.silverpine.uu.logging.UULog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.BufferedOutputStream
-import java.io.OutputStream
 import java.net.HttpURLConnection
 
 open class UUHttpSession
@@ -44,20 +39,25 @@ open class UUHttpSession
             UULog.d(javaClass, "executeRequest", "${request.method} ${urlConnection.url} ")
             //UULog.d(javaClass, "executeRequest", "Timeout: ${request.timeout}")
 
-            val serializedBody = request.serializeBody().getOrElse()
+            val preparedBody = request.body?.prepareToSend()?.getOrElse()
             { error ->
                 return UUHttpResponse(
                     request = request,
                     error = error)
             }
 
-            request.applyHeaders(urlConnection)
+            preparedBody?.second?.entries?.forEach()
+            { entry ->
+                request.headers.put(entry.key, entry.value)
+            }
 
-            serializedBody?.let()
+            urlConnection.uuSetHeaders(request.headers)
+
+            preparedBody?.first?.let()
             {
                 urlConnection.doOutput = true
                 urlConnection.setFixedLengthStreamingMode(it.size)
-                val writeError = writeRequest(urlConnection, it)
+                val writeError = urlConnection.uuWriteBody(it)
                 if (writeError != null)
                 {
                     return UUHttpResponse(
@@ -77,7 +77,7 @@ open class UUHttpSession
             val responseHeaders = UUHttpHeaders(urlConnection.headerFields)
             responseHeaders.log("executeRequest", "ResponseHeader")
 
-            return handleResponse(request, urlConnection)
+            return urlConnection.uuHandleResponse(request)
         }
         catch (ex: Exception)
         {
@@ -90,59 +90,6 @@ open class UUHttpSession
         finally
         {
             urlConnection?.uuSafeDisconnect()
-        }
-    }
-
-    private fun writeRequest(connection: HttpURLConnection, body: ByteArray): UUError?
-    {
-        var os: OutputStream? = null
-
-        try
-        {
-            UULog.d(javaClass, "executeRequest", "RequestBody: ${body.uuUtf8().getOrNull()}")
-            os = BufferedOutputStream(connection.outputStream)
-            os.write(body)
-            os.flush()
-        }
-        catch (ex: Exception)
-        {
-            UULog.d(javaClass, "writeRequest", "", ex)
-            return UUHttpError.fromException(UUHttpErrorCode.WRITE_FAILED, ex)
-        }
-        finally
-        {
-            os?.uuSafeClose()
-        }
-
-        return null
-    }
-
-    private fun HttpURLConnection?.uuSafeDisconnect()
-    {
-        try
-        {
-            this?.disconnect()
-        }
-        catch (ex: Exception)
-        {
-            UULog.d(javaClass, "uuSafeDisconnect", "", ex)
-        }
-    }
-
-    private suspend fun handleResponse(request: UUHttpRequest, urlConnection: HttpURLConnection): UUHttpResponse
-    {
-        try
-        {
-            return request.responseHandler.handleResponse(request, urlConnection)
-        }
-        catch (ex: Exception)
-        {
-            UULog.d(javaClass, "handleResponse", "", ex)
-
-            return UUHttpResponse(
-                request = request,
-                error = UUHttpError.fromException(UUHttpErrorCode.HandleResponseException, ex)
-            )
         }
     }
 }
