@@ -4,8 +4,8 @@ import androidx.annotation.Keep
 import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.UUResultBlock
+import com.silverpine.uu.networking.UUHttpLoggingMode
 import com.silverpine.uu.networking.UUHttpMethod
-import com.silverpine.uu.networking.UUHttpSession
 import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.UURemoteApi
@@ -14,7 +14,7 @@ import com.silverpine.uu.networking.authorization.UUTokenAuthorizationProvider
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-class OpenAiApi: UURemoteApi(UUHttpSession())
+class OpenAiApi: UURemoteApi()
 {
     private val baseUrl = "https://api.openai.com/v1"
 
@@ -64,6 +64,7 @@ class OpenAiApi: UURemoteApi(UUHttpSession())
         val uri = UUHttpUri("$baseUrl/responses")
         val request = UUTypedHttpRequest<OpenAiResponse, OpenAiErrorResponse>(uri, OpenAiResponse::class.java, OpenAiErrorResponse::class.java)
         request.method = UUHttpMethod.POST
+        request.loggingMode = UUHttpLoggingMode.Verbose
         return request
     }
 }
