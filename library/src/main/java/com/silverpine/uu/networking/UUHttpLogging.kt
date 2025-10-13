@@ -15,7 +15,7 @@ object UUHttpLogging
     {
         if (request.loggingMode.contains(mode))
         {
-            UULog.d(javaClass, "${request.id}-${mode.name}", message, throwable)
+            UULog.d(javaClass, "UUHttpLogging [${request.id}] [${mode.name}]", message, throwable)
         }
     }
 
