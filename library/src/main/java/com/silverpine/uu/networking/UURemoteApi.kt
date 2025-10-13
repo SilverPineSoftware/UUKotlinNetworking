@@ -81,7 +81,7 @@ open class UURemoteApi(
             request.authorizationProvider = defaultAuthorizationProvider
         }
 
-        request.authorizationProvider?.attachAuthorization(request.headers)
+        request.authorizationProvider?.attachAuthorization(request)
         executeRequest(request, completion)
     }
 
