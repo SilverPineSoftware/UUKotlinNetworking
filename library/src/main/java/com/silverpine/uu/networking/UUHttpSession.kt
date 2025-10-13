@@ -77,7 +77,9 @@ open class UUHttpSession
             val responseHeaders = UUHttpHeaders(urlConnection.headerFields)
             responseHeaders.log("executeRequest", "ResponseHeader")
 
-            return urlConnection.uuHandleResponse(request)
+            val response = urlConnection.uuHandleResponse(request)
+            request.end()
+            return response
         }
         catch (ex: Exception)
         {
