@@ -2,9 +2,9 @@ package com.silverpine.uu.sample.networking.shutterstock
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Environment
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -37,15 +37,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.silverpine.uu.networking.UURemoteImage
 import com.silverpine.uu.sample.networking.PreviewPrefs
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
-import java.net.URL
 
 fun createAppDownloadsSubfolder(context: Context, folderName: String): File?
 {
@@ -142,6 +141,8 @@ fun ShutterstockScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(4.dp)
         ) {
             items(images.size)
@@ -216,7 +217,8 @@ fun RemoteImage(
     var loading by remember { mutableStateOf(true) }
 
     // Trigger download once when this composable is first created
-    LaunchedEffect(url) {
+    LaunchedEffect(url)
+    {
         bitmap = downloadBitmap(url, outputDir)
         loading = false
     }
@@ -226,16 +228,22 @@ fun RemoteImage(
             .fillMaxWidth()
             .aspectRatio(1f),
         contentAlignment = androidx.compose.ui.Alignment.Center
-    ) {
-        when {
-            bitmap != null -> {
+    )
+    {
+        when
+        {
+            bitmap != null ->
+            {
                 Image(
                     bitmap = bitmap!!.asImageBitmap(),
                     contentDescription = "Downloaded image",
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             }
-            loading -> {
+
+            loading ->
+            {
                 CircularProgressIndicator(modifier = Modifier.size(48.dp))
             }
         }
@@ -245,25 +253,8 @@ fun RemoteImage(
 
 private suspend fun downloadBitmap(url: String, outputDir: File): Bitmap?
 {
-    return withContext(Dispatchers.IO) {
-        try {
-            val fileName = url.substringAfterLast('/')
-            val outFile = File(outputDir, fileName)
-
-            if (!outFile.exists()) {
-                URL(url).openStream().use { input ->
-                    outFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-            }
-
-            BitmapFactory.decodeFile(outFile.absolutePath)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
+    val api = UURemoteImage(downloadFolder = outputDir)
+    return api.download(url).getOrNull()
 }
 
 @Preview(showBackground = true)
