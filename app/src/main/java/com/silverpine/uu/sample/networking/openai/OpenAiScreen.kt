@@ -32,7 +32,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.silverpine.uu.core.security.UUSecurePrefs
+import com.silverpine.uu.sample.networking.PreviewPrefs
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +41,7 @@ fun OpenAiScreen(
     loading: Boolean = false,
     prompt: String = "",
     results: List<OpenAiTableItem> = listOf(),
-    repository: SettingsRepository = SettingsRepository(),
+    repository: OpenAiPrefsRepository = OpenAiPrefsRepository(),
     showSettings: Boolean,
     onSettingsDismissed: () -> Unit
 )
@@ -190,84 +190,6 @@ fun PromptInput(
 }
 
 
-
-
-interface Prefs
-{
-    fun getString(key: String): String?
-    fun setString(key: String, value: String?)
-}
-
-class SecurePrefs: Prefs
-{
-    override fun getString(key: String): String?
-    {
-        return UUSecurePrefs.getString(key)
-    }
-
-    override fun setString(key: String, value: String?)
-    {
-        UUSecurePrefs.setString(key, value)
-    }
-}
-
-class PreviewPrefs(
-    private val backing: MutableMap<String, String?> = mutableMapOf()
-) : Prefs {
-
-    override fun getString(key: String): String? = backing[key]
-
-    override fun setString(key: String, value: String?)
-    {
-        if (value == null)
-        {
-            backing.remove(key)
-        }
-        else
-        {
-            backing[key] = value
-        }
-    }
-}
-
-
-class SettingsRepository(val prefs: Prefs = SecurePrefs())
-{
-    private val API_KEY = "api_key"
-    private val MODEL_CHOICE = "model_choice"
-
-    fun saveApiKey(key: String)
-    {
-        prefs.setString(API_KEY, key)
-    }
-
-    fun loadApiKey(): String
-    {
-        return prefs.getString(API_KEY) ?: ""
-    }
-
-    fun saveModelChoice(model: String)
-    {
-        prefs.setString(MODEL_CHOICE, model)
-    }
-
-    fun loadModelChoice(): String
-    {
-        return prefs.getString(MODEL_CHOICE) ?: ""
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
 @Preview("Loading", apiLevel = 35, showBackground = true)
 @Composable
 fun PreviewScreen()
@@ -276,7 +198,7 @@ fun PreviewScreen()
         loading = true,
         prompt = "This is a question for Open AI",
         results = listOf(),
-        repository = SettingsRepository(PreviewPrefs()),
+        repository = OpenAiPrefsRepository(PreviewPrefs()),
         false,
         { }
     )

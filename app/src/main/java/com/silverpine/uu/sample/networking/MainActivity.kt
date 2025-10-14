@@ -34,9 +34,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.silverpine.uu.sample.networking.openai.OpenAiPrefsRepository
 import com.silverpine.uu.sample.networking.openai.OpenAiScreen
-import com.silverpine.uu.sample.networking.openai.SettingsRepository
-import com.silverpine.uu.sample.networking.shutterstock.ShutterStockScreen
+import com.silverpine.uu.sample.networking.shutterstock.ShutterstockPrefsRepository
+import com.silverpine.uu.sample.networking.shutterstock.ShutterstockScreen
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity()
@@ -63,7 +64,8 @@ sealed class AppScreen(val label: String, val icon: ImageVector)
 @Composable
 fun MainScreen()
 {
-    val repository = remember { SettingsRepository() }
+    val openAiRepository = remember { OpenAiPrefsRepository() }
+    val shutterstockRepository = remember { ShutterstockPrefsRepository() }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -133,12 +135,12 @@ fun MainScreen()
                 when (currentScreen)
                 {
                     is AppScreen.OpenAi -> OpenAiScreen(
-                        repository = repository,
+                        repository = openAiRepository,
                         showSettings = showOpenAiSettings,
                         onSettingsDismissed = { showOpenAiSettings = false }
                     )
-                    is AppScreen.ShutterStock -> ShutterStockScreen(
-                        //repository = repository,
+                    is AppScreen.ShutterStock -> ShutterstockScreen(
+                        repository = shutterstockRepository,
                         showSettings = showShutterstockSettings,
                         onSettingsDismissed = { showShutterstockSettings = false }
                     )

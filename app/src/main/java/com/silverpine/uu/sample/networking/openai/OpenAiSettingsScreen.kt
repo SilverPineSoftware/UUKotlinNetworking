@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OpenAiSettingsScreen(
-    repository: SettingsRepository = SettingsRepository(),
+    repository: OpenAiPrefsRepository = OpenAiPrefsRepository(),
     onClose: () -> Unit)
 {
     val repository = remember { repository }
