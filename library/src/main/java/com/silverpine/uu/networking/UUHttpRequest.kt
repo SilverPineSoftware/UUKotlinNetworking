@@ -1,15 +1,24 @@
 package com.silverpine.uu.networking
 
+import androidx.core.net.toUri
 import com.silverpine.uu.core.uuFormatAsRfc3339
 import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
+import com.silverpine.uu.networking.connectivity.UUConnectivity
+import com.silverpine.uu.networking.connectivity.UUConnectivityProvider
 import java.net.CookieHandler
 import java.net.Proxy
+import java.net.URL
 import java.util.UUID
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLSocketFactory
 
+typealias UUQueryStringsArgs = HashMap<String, String>
+typealias UUPathArgs = ArrayList<String>
+
 open class UUHttpRequest(
-    var uri: UUHttpUri,
+    val url: String,
+    val path: UUPathArgs = arrayListOf(),
+    val query: UUQueryStringsArgs = hashMapOf(),
     var method: UUHttpMethod = UUHttpMethod.GET,
     var headers: UUHttpHeaders = UUHttpHeaders(),
     var body: UUHttpBody? = null,
@@ -24,12 +33,14 @@ open class UUHttpRequest(
     var hostNameVerifier: HostnameVerifier? = null,
     var authorizationProvider: UUHttpAuthorizationProvider? = null,
     var responseHandler: UUHttpResponseHandler = UUBaseResponseHandler(),
+    var connectivityProvider: UUConnectivityProvider? = UUConnectivity,
     var loggingMode: Array<UUHttpLoggingMode> = UUHttpLoggingMode.Info
 )
 {
     enum class State
     {
         Idle,
+        CheckConnection,
         OpenConnection,
         PrepareToSend,
         WriteRequest,
@@ -58,6 +69,24 @@ open class UUHttpRequest(
         val durationSeconds = (endTime - startTime).toDouble() / 1000
         UUHttpLogging.log(UUHttpLoggingMode.Response, this, "Duration: $durationSeconds seconds")
     }
+
+    val toURL: URL
+        get()
+        {
+            val builder = url.toUri().buildUpon()
+
+            path.forEach()
+            {
+                builder.appendPath(it)
+            }
+
+            query.forEach()
+            {
+                builder.appendQueryParameter(it.key, it.value)
+            }
+
+            return URL(builder.build().toString())
+        }
 }
 
 

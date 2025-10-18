@@ -30,8 +30,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.silverpine.uu.networking.UUHttpErrorCode
 import com.silverpine.uu.sample.networking.PreviewPrefs
 import kotlinx.coroutines.launch
 
@@ -62,6 +64,8 @@ fun OpenAiScreen(
         OpenAiApi()
     }
 
+    val context = LocalContext.current
+
     val repository = remember { repository }
 
     fun updateApiVars()
@@ -88,6 +92,12 @@ fun OpenAiScreen(
 
                         result.onFailure()
                         {
+                            val errorCode = UUHttpErrorCode.fromInt(result.errorOrNull()?.code ?: 0)
+                            if (errorCode == UUHttpErrorCode.CaptiveNetworkLoginNeeded)
+                            {
+                                // TODO: try to prompt for network login...
+                            }
+
                             val answer = result.errorOrNull()?.toString() ?: "Unexpected error"
                             tableData.add(OpenAiTableItem(tableData.size, prompt, answer))
                         }

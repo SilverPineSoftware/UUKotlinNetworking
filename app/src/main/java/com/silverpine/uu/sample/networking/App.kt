@@ -6,6 +6,8 @@ import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.security.UUSecurePrefs
 import com.silverpine.uu.logging.UUConsoleLogger
 import com.silverpine.uu.logging.UULog
+import com.silverpine.uu.networking.connectivity.UUConnectivity
+import com.silverpine.uu.networking.connectivity.UUNetworkConnectivityProvider
 import kotlinx.serialization.json.Json
 
 class App: Application()
@@ -19,6 +21,7 @@ class App: Application()
     fun setupUU()
     {
         UULog.init(UUConsoleLogger())
+        UUConnectivity.init(UUNetworkConnectivityProvider(applicationContext))
 
         UUJson.init(
             UUKotlinXJsonProvider(Json()

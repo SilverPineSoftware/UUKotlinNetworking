@@ -1,5 +1,6 @@
 package com.silverpine.uu.networking
 
+import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUObjectBlock
 import com.silverpine.uu.core.UUResult
 import kotlinx.coroutines.CoroutineScope
@@ -9,7 +10,7 @@ import java.net.CookieHandler
 import java.net.HttpURLConnection
 import javax.net.ssl.HttpsURLConnection
 
-open class UUHttpSession
+open class UUHttpSession()
 {
     open fun executeRequest(request: UUHttpRequest, completion: UUObjectBlock<UUHttpResponse>)
     {
@@ -30,6 +31,13 @@ open class UUHttpSession
 
         try
         {
+            request.state = UUHttpRequest.State.OpenConnection
+            checkConnection(request)?.let()
+            { error ->
+                UUHttpLogging.logError(request, error)
+                return UUHttpResponse(request = request, error = error)
+            }
+
             request.state = UUHttpRequest.State.OpenConnection
             urlConnection = openConnection(request).getOrElse()
             { error ->
@@ -106,13 +114,18 @@ open class UUHttpSession
         }
     }
 
+    open fun checkConnection(request: UUHttpRequest): UUError?
+    {
+        return request.connectivityProvider?.checkConnection()
+    }
+
     open fun openConnection(request: UUHttpRequest): UUResult<HttpURLConnection>
     {
         var result: UUResult<HttpURLConnection>? = null
 
         try
         {
-            val url = request.uri.fullUrl
+            val url = request.toURL
 
             var urlConnection = url.uuOpenConnection(request.proxy)
 

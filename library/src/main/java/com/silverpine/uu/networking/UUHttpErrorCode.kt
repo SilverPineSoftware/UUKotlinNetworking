@@ -71,6 +71,8 @@ enum class UUHttpErrorCode(val value: Int)
     // An exception was caught in HandleResponse
     HandleResponseException(1013),
 
+    CaptiveNetworkLoginNeeded(1014),
+
     // Error code returned when an unknown error occurs.  This is typically a developer error. Contact the Api developers.
     UNDEFINED(1999);
 
