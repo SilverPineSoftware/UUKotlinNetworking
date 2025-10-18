@@ -6,7 +6,6 @@ import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.UUResultBlock
 import com.silverpine.uu.networking.UUHttpLoggingMode
 import com.silverpine.uu.networking.UUHttpMethod
-import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.UURemoteApi
 import com.silverpine.uu.networking.UUTypedHttpRequest
@@ -43,6 +42,12 @@ class OpenAiApi: UURemoteApi()
         executeAuthorizedRequest(request)
         { response ->
 
+            response.error?.let()
+            { err ->
+                completion(UUResult.failure(err))
+                return@let
+            }
+
             val textResponse = (response.parsedResponse as? OpenAiResponse)?.let()
             {
                 it.output.firstOrNull()?.content?.firstOrNull()?.text
@@ -61,8 +66,10 @@ class OpenAiApi: UURemoteApi()
 
     private fun buildRequest(): UUTypedHttpRequest<OpenAiResponse, OpenAiErrorResponse>
     {
-        val uri = UUHttpUri("$baseUrl/responses")
-        val request = UUTypedHttpRequest<OpenAiResponse, OpenAiErrorResponse>(uri, OpenAiResponse::class.java, OpenAiErrorResponse::class.java)
+        val request = UUTypedHttpRequest<OpenAiResponse, OpenAiErrorResponse>(
+            url = "$baseUrl/responses",
+            successClass = OpenAiResponse::class.java,
+            errorClass = OpenAiErrorResponse::class.java)
         request.method = UUHttpMethod.POST
         request.loggingMode = UUHttpLoggingMode.Verbose
         return request

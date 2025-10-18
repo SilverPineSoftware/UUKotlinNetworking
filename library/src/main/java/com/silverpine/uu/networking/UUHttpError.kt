@@ -90,7 +90,7 @@ object UUHttpError
     private fun Bundle.fillFromRequest(request: UUHttpRequest)
     {
         putString(UserInfoKeys.HttpMethod.key, request.method.name)
-        putString(UserInfoKeys.RequestUrl.key, request.uri.fullUrl.toString())
+        putString(UserInfoKeys.RequestUrl.key, request.toURL.toString())
     }
 }
 

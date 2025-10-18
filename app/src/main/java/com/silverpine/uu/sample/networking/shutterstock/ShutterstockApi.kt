@@ -6,7 +6,6 @@ import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.UUResultBlock
 import com.silverpine.uu.networking.UUHttpLoggingMode
 import com.silverpine.uu.networking.UUHttpMethod
-import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UURemoteApi
 import com.silverpine.uu.networking.UUTypedHttpRequest
 import com.silverpine.uu.networking.authorization.UUBasicAuthorizationProvider
@@ -48,16 +47,15 @@ class ShutterstockApi : UURemoteApi()
         perPage: Int = 20,
         completion: UUResultBlock<ShutterstockSearchResponse>
     ) {
-        val uri = UUHttpUri("$baseUrl/images/search")
-        uri.query.put("query", query)
-        uri.query.put("page", page.toString())
-        uri.query.put("per_page", perPage.toString())
-        uri.query.put("image_type", "photo")
-
         val request = UUTypedHttpRequest(
-            uri,
-            ShutterstockSearchResponse::class.java,
-            ShutterstockErrorResponse::class.java
+            url = "$baseUrl/images/search",
+            query =
+                hashMapOf("query" to query,
+                    "page" to page.toString(),
+                    "per_page" to perPage.toString(),
+                    "image_type" to "photo"),
+            successClass = ShutterstockSearchResponse::class.java,
+            errorClass = ShutterstockErrorResponse::class.java
         ).apply {
             method = UUHttpMethod.GET
             loggingMode = UUHttpLoggingMode.Verbose

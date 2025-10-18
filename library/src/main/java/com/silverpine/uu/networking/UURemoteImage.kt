@@ -29,9 +29,7 @@ class UURemoteImage(
         return suspendCoroutine()
         { continuation ->
 
-            val uri = UUHttpUri(url)
-
-            val request = UUHttpRequest(uri).apply()
+            val request = UUHttpRequest(url).apply()
             {
                 method = UUHttpMethod.GET
                 responseHandler = UUFileResponseHandler(downloadFolder)

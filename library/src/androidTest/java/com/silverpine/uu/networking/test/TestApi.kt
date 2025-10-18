@@ -5,9 +5,8 @@ import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.UUResultBlock
 import com.silverpine.uu.networking.UUHttpMethod
 import com.silverpine.uu.networking.UUHttpSession
-import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UUJsonBody
-import com.silverpine.uu.networking.UUQueryStringArgs
+import com.silverpine.uu.networking.UUQueryStringsArgs
 import com.silverpine.uu.networking.UURemoteApi
 import com.silverpine.uu.networking.UUTypedHttpRequest
 import kotlinx.serialization.Serializable
@@ -112,7 +111,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
 
     override fun getObject(echo: TestApiObject?, completion: UUResultBlock<TestApiObject>)
     {
-        val queryArgs = UUQueryStringArgs()
+        val queryArgs: UUQueryStringsArgs = hashMapOf()
 
         echo?.let()
         {
@@ -132,8 +131,11 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
             }
         }
 
-        val uri = UUHttpUri("$apiUrl/single", queryArgs)
-        val request = UUTypedHttpRequest<TestApiObject, TestApiError>(uri, TestApiObject::class.java, TestApiError::class.java)
+        val request = UUTypedHttpRequest<TestApiObject, TestApiError>(
+            url = "$apiUrl/single",
+            query = queryArgs,
+            successClass = TestApiObject::class.java,
+            errorClass = TestApiError::class.java)
         executeRequest(request)
         { response ->
 
@@ -151,11 +153,13 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
 
     override fun getArray(count: Int, completion: UUResultBlock<Array<TestApiObject>>)
     {
-        val queryArgs = UUQueryStringArgs()
+        val queryArgs: UUQueryStringsArgs = hashMapOf()
         queryArgs["count"] = "$count"
 
-        val uri = UUHttpUri("$apiUrl/multiple", query = queryArgs)
-        val request = UUTypedHttpRequest<Array<TestApiObject>, TestApiError>(uri, Array<TestApiObject>::class.java, TestApiError::class.java)
+        val request = UUTypedHttpRequest<Array<TestApiObject>, TestApiError>(
+            url = "$apiUrl/multiple", query = queryArgs,
+            successClass = Array<TestApiObject>::class.java,
+            errorClass = TestApiError::class.java)
         executeRequest(request)
         { response ->
 
@@ -174,8 +178,10 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
 
     override fun postObject(obj: TestApiObject, completion: UUResultBlock<TestApiObject>)
     {
-        val uri = UUHttpUri("$apiUrl/single")
-        val request = UUTypedHttpRequest<TestApiObject, TestApiError>(uri, TestApiObject::class.java, TestApiError::class.java)
+        val request = UUTypedHttpRequest<TestApiObject, TestApiError>(
+            url = "$apiUrl/single",
+            successClass = TestApiObject::class.java,
+            errorClass = TestApiError::class.java)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(obj)
 
@@ -196,8 +202,10 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
 
     override fun postArray(array: Array<TestApiObject>, completion: UUResultBlock<Array<TestApiObject>>)
     {
-        val uri = UUHttpUri("$apiUrl/single")
-        val request = UUTypedHttpRequest<Array<TestApiObject>, TestApiError>(uri, Array<TestApiObject>::class.java, TestApiError::class.java)
+        val request = UUTypedHttpRequest<Array<TestApiObject>, TestApiError>(
+            url = "$apiUrl/single",
+            successClass = Array<TestApiObject>::class.java,
+            errorClass = TestApiError::class.java)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(array)
 

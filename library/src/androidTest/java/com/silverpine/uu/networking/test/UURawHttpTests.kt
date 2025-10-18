@@ -15,7 +15,6 @@ import com.silverpine.uu.networking.UUHttpRequest
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.UUHttpSession
 import com.silverpine.uu.networking.UUHttpStreamParser
-import com.silverpine.uu.networking.UUHttpUri
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.UUTypedResponseHandler
 import com.silverpine.uu.test.uuRandomLetters
@@ -67,7 +66,7 @@ class UURawHttpTests
     @Test
     fun test_0000_simple_get()
     {
-        val uri = UUHttpUri("https://spsw.io/uu/echo_json.php")
+        val uri = "https://spsw.io/uu/echo_json.php"
         val request = UUHttpRequest(uri)
         val session = UUHttpSession()
 
@@ -88,7 +87,7 @@ class UURawHttpTests
     @Test
     fun test_0001_get_list()
     {
-        val uri = UUHttpUri("https://spsw.io/uu/echo_json.php?id=foo&name=bar&level=1&xp=57")
+        val uri = "https://spsw.io/uu/echo_json.php?id=foo&name=bar&level=1&xp=57"
 
         val request = UUHttpRequest(uri)
 
@@ -120,7 +119,7 @@ class UURawHttpTests
     @Test
     fun test_0002_simple_echo_post()
     {
-        val uri = UUHttpUri("https://spsw.io/uu/echo_json_post.php")
+        val uri = "https://spsw.io/uu/echo_json_post.php"
 
         val model = TestModel()
         model.id = UURandom.uuid()
@@ -154,7 +153,7 @@ class UURawHttpTests
     @Test
     fun test_0003_download_zip()
     {
-        val uri = UUHttpUri("https://spsw.io/uu/random_zip_100.zip")
+        val uri = "https://spsw.io/uu/random_zip_100.zip"
 
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.GET

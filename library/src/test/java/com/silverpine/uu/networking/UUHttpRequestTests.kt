@@ -8,7 +8,7 @@ class UUHttpRequestTests
     @Test
     fun testConstructor()
     {
-        val req = UUHttpRequest(UUHttpUri(""))
+        val req = UUHttpRequest("")
         assertNotNull(req.id)
     }
 
