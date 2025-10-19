@@ -61,7 +61,7 @@ open class UUHttpBody(var contentType: String, var contentEncoding: String? = nu
     }
 }
 
-class UUJsonBody<T: Any>(private val jsonObject: T): UUHttpBody(UUContentType.APPLICATION_JSON)
+class UUJsonBody<T: Any>(private val jsonObject: T): UUHttpBody(UUContentType.ApplicationJson.value)
 {
     override fun encode(): ByteArray?
     {
