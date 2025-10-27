@@ -65,7 +65,7 @@ class UUJsonBody<T: Any>(private val jsonObject: T): UUHttpBody(UUContentType.Ap
 {
     override fun encode(): ByteArray?
     {
-        val json = UUJson.toJson(jsonObject, jsonObject.javaClass)
+        val json = UUJson.toJson(jsonObject, jsonObject.javaClass).getOrNull()
         return json?.uuUtf8ByteArray()
     }
 }

@@ -250,7 +250,7 @@ class UUHttpSessionTests
     }
 
     @OptIn(ExperimentalAtomicApi::class)
-    private fun doRequest(session: UUHttpSession, request: UUHttpRequest, timeout: Long = UUDate.Constants.millisInOneSecond * 30): UUHttpResponse
+    private fun doRequest(session: UUHttpSession, request: UUHttpRequest, timeout: Long = UUDate.Constants.MILLIS_IN_ONE_SECOND * 30): UUHttpResponse
     {
         val latch = CountDownLatch(1)
         val responseContainer = AtomicReference<UUHttpResponse?>(null)
