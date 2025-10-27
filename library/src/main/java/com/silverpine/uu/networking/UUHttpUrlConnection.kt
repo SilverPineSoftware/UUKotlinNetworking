@@ -1,6 +1,5 @@
 package com.silverpine.uu.networking
 
-import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.uuSafeClose
 import com.silverpine.uu.logging.UULog
 import java.io.BufferedOutputStream
@@ -29,26 +28,29 @@ fun URL.uuOpenConnection(proxy: Proxy? = null): HttpURLConnection?
     }
 }
 
-fun HttpURLConnection.uuWriteBody(body: ByteArray): UUError?
+fun HttpURLConnection.uuWriteBody(body: ByteArray): Result<Unit>
 {
     var os: OutputStream? = null
 
     try
     {
+        doOutput = true
+        setFixedLengthStreamingMode(body.size.toLong())
+
         os = BufferedOutputStream(outputStream)
         os.write(body)
         os.flush()
     }
     catch (ex: Exception)
     {
-        return UUHttpError.fromException(UUHttpErrorCode.WRITE_FAILED, ex)
+        return Result.failure(ex)
     }
     finally
     {
         os?.uuSafeClose()
     }
 
-    return null
+    return Result.success(Unit)
 }
 
 fun HttpURLConnection.uuSafeDisconnect()

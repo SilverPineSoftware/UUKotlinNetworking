@@ -25,20 +25,25 @@ open class UUHttpSession()
     {
     }
 
+    private fun changeState(request: UUHttpRequest, state: UUHttpRequest.State)
+    {
+        request.state = state
+    }
+
     private suspend fun doOneRequest(request: UUHttpRequest): UUHttpResponse
     {
         var urlConnection: HttpURLConnection? = null
 
         try
         {
-            request.state = UUHttpRequest.State.OpenConnection
+            changeState(request, UUHttpRequest.State.CheckConnection)
             checkConnection(request)?.let()
             { error ->
                 UUHttpLogging.logError(request, error)
                 return UUHttpResponse(request = request, error = error)
             }
 
-            request.state = UUHttpRequest.State.OpenConnection
+            changeState(request, UUHttpRequest.State.OpenConnection)
             urlConnection = openConnection(request).getOrElse()
             { error ->
                 UUHttpLogging.logError(request, error)
@@ -49,7 +54,7 @@ open class UUHttpSession()
             UUHttpLogging.log(UUHttpLoggingMode.Request, request, "Connect Timeout: ${request.connectTimeout}")
             UUHttpLogging.log(UUHttpLoggingMode.Request, request, "Read Timeout: ${request.readTimeout}")
 
-            request.state = UUHttpRequest.State.PrepareToSend
+            changeState(request, UUHttpRequest.State.PrepareToSend)
             val preparedBody = request.body?.prepareToSend()?.getOrElse()
             { error ->
                 UUHttpLogging.logError(request, error)
@@ -67,18 +72,11 @@ open class UUHttpSession()
 
             preparedBody?.first?.let()
             {
-                request.state = UUHttpRequest.State.WriteRequest
-                urlConnection.doOutput = true
-                urlConnection.setFixedLengthStreamingMode(it.size)
-                val writeError = urlConnection.uuWriteBody(it)
-                if (writeError != null)
-                {
-                    UUHttpLogging.logError(request, writeError)
-                    return UUHttpResponse(request = request, error = writeError)
-                }
+                changeState(request, UUHttpRequest.State.WriteRequest)
+                urlConnection.uuWriteBody(it).getOrThrow()
             }
 
-            request.state = UUHttpRequest.State.PrepareToReceive
+            changeState(request, UUHttpRequest.State.PrepareToReceive)
             val httpCode = urlConnection.responseCode
             val contentType = urlConnection.contentType ?: ""
             val contentEncoding = urlConnection.contentEncoding ?: ""
@@ -90,14 +88,14 @@ open class UUHttpSession()
             val responseHeaders = UUHttpHeaders(urlConnection.headerFields)
             UUHttpLogging.logHeaders(request, UUHttpLoggingMode.ResponseHeaders, responseHeaders)
 
-            request.state = UUHttpRequest.State.HandleResponse
+            changeState(request, UUHttpRequest.State.HandleResponse)
             val response = handleResponse(request, urlConnection)
             response.error?.let()
             {
                 UUHttpLogging.logError(request, it)
             }
 
-            request.state = UUHttpRequest.State.Complete
+            changeState(request, UUHttpRequest.State.Complete)
             request.end()
             return response
         }

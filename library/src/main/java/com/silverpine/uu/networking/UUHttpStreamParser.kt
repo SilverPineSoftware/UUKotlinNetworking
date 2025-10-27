@@ -44,7 +44,7 @@ open class UUTypedStreamParser<DataType: Any>(private val objectClass: Class<Dat
         response: HttpURLConnection
     ): Any?
     {
-        return UUJson.fromStream(stream, objectClass)
+        return UUJson.fromStream(stream, objectClass).getOrNull()
     }
 }
 
