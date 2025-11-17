@@ -17,7 +17,7 @@ class SecurePrefs: Prefs
 
     override fun setString(key: String, value: String?)
     {
-        UUSecurePrefs.setString(key, value)
+        UUSecurePrefs.putString(key, value)
     }
 }
 

@@ -23,7 +23,7 @@ fun OpenAiTableItemRow(item: OpenAiTableItem, modifier: Modifier = Modifier)
             .padding(16.dp)
     ) {
         Text(
-            text = item.timestamp.uuFormatDate(UUDate.Formats.iso8601DateTime),
+            text = item.timestamp.uuFormatDate(UUDate.Formats.ISO_8601_DATE_AND_TIME),
             style = MaterialTheme.typography.labelSmall
         )
         Spacer(Modifier.height(4.dp))
