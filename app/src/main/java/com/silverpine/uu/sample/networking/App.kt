@@ -6,6 +6,7 @@ import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.security.UUSecurePrefs
 import com.silverpine.uu.logging.UUConsoleLogWriter
 import com.silverpine.uu.logging.UULog
+import com.silverpine.uu.logging.UULogLevel
 import com.silverpine.uu.logging.UULogger
 import com.silverpine.uu.networking.connectivity.UUConnectivity
 import com.silverpine.uu.networking.connectivity.UUNetworkConnectivityProvider
@@ -21,7 +22,10 @@ class App: Application()
 
     fun setupUU()
     {
-        UULog.setLogger(UULogger(UUConsoleLogWriter()))
+        val logger = UULogger(UUConsoleLogWriter())
+        logger.logLevel = UULogLevel.VERBOSE
+        UULog.setLogger(logger)
+
         UUConnectivity.init(UUNetworkConnectivityProvider(applicationContext))
 
         UUJson.init(
