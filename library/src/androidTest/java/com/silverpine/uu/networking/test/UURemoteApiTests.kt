@@ -5,8 +5,9 @@ import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.uuSleep
-import com.silverpine.uu.logging.UUConsoleLogger
+import com.silverpine.uu.logging.UUConsoleLogWriter
 import com.silverpine.uu.logging.UULog
+import com.silverpine.uu.logging.UULogger
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.uuIsHttpSuccess
 import com.silverpine.uu.test.UUAssert
@@ -22,6 +23,8 @@ import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
+
+private const val LOG_TAG = "UURemoteApiTests"
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -42,7 +45,7 @@ class UURemoteApiTests
     @Before
     fun doBefore()
     {
-        UULog.init(UUConsoleLogger())
+        TestLogger.init()
 
         UUJson.init(UUKotlinXJsonProvider(Json()
         {
@@ -79,7 +82,7 @@ class UURemoteApiTests
 
         val response = UUAssert.unwrap(responseContainer.get())
         val success = UUAssert.unwrap(response.getOrNull())
-        UULog.d(javaClass, "test_0000_getObject", "Response: $success")
+        UULog.debug(LOG_TAG, "test_0000_getObject, Response: $success")
         //assertReply(200, DEFAULT_API_OBJECT, null, response)
     }
 
@@ -102,7 +105,7 @@ class UURemoteApiTests
 
         val response = UUAssert.unwrap(responseContainer.get())
         val success = UUAssert.unwrap(response.getOrNull())
-        UULog.d(javaClass, "test_0002_getObjectWithOverrides", "Response: $success")
+        UULog.debug(LOG_TAG, "test_0002_getObjectWithOverrides, Response: $success")
 
         //assertReply(200, override, null, response)
     }
@@ -125,7 +128,7 @@ class UURemoteApiTests
 
         val response = UUAssert.unwrap(responseContainer.get())
         val success = UUAssert.unwrap(response.getOrNull())
-        UULog.d(javaClass, "test_0003_getArray", "Response: $success")
+        UULog.debug(LOG_TAG, "test_0003_getArray, Response: $success")
 
         // assertArrayReply(200, count, null, response)
 
@@ -149,7 +152,7 @@ class UURemoteApiTests
 
         val response = UUAssert.unwrap(responseContainer.get())
         val success = UUAssert.unwrap(response.getOrNull())
-        UULog.d(javaClass, "test_0004_postObject", "Response: $success")
+        UULog.debug(LOG_TAG, "test_0004_postObject, Response: $success")
         //assertReply(200, DEFAULT_API_OBJECT, null, response)
     }
 
@@ -175,7 +178,7 @@ class UURemoteApiTests
 
         val response = UUAssert.unwrap(responseContainer.get())
         val success = UUAssert.unwrap(response.getOrNull())
-        UULog.d(javaClass, "test_0005_postList", "Response: $success")
+        UULog.debug(LOG_TAG, "test_0005_postList, Response: $success")
 
         //assertArrayReply(200, post.size, null, response)
     }

@@ -5,6 +5,8 @@ import com.silverpine.uu.core.uuSubData
 import com.silverpine.uu.logging.UULog
 import java.io.BufferedInputStream
 
+private const val LOG_TAG = "UUHttp"
+
 object UUHttpLogging
 {
     fun log(
@@ -15,7 +17,7 @@ object UUHttpLogging
     {
         if (request.loggingMode.contains(mode))
         {
-            UULog.d(javaClass, "UUHttpLogging [${request.id}] [${mode.name}]", message, throwable)
+            UULog.debug(LOG_TAG, "UUHttpLogging [${request.id}] [${mode.name}]- $message, $throwable")
         }
     }
 

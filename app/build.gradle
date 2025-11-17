@@ -19,20 +19,19 @@ composeCompiler {
 
 dependencies {
 
-    //implementation 'androidx.appcompat:appcompat:1.7.1'
     // Core Activity library
     implementation("androidx.activity:activity-ktx:1.11.0") // or latest stable
 
     // For Compose integration
     implementation("androidx.activity:activity-compose:1.11.0")
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0'
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'androidx.annotation:annotation-experimental:1.5.1'
 
     // Use the Compose BOM to keep versions aligned
-    implementation platform("androidx.compose:compose-bom:2025.10.00")
+    implementation platform("androidx.compose:compose-bom:2025.11.00")
 
     // Core Compose libraries
     implementation "androidx.compose.ui:ui"
@@ -46,8 +45,8 @@ dependencies {
 
     implementation "com.silverpine.uu:uu-core-ktx:${uu_core_version}"
     implementation project(':library')
-    implementation 'androidx.compose.runtime:runtime-android:1.9.3'
-    implementation 'androidx.compose.foundation:foundation-layout-android:1.9.3'
+    implementation 'androidx.compose.runtime:runtime-android:1.9.4'
+    implementation 'androidx.compose.foundation:foundation-layout-android:1.9.4'
     implementation 'androidx.compose.material3:material3-android:1.4.0'
 
     testImplementation 'junit:junit:4.13.2'

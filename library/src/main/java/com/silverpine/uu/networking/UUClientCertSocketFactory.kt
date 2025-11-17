@@ -2,6 +2,7 @@ package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.uuFromBase64
 import com.silverpine.uu.logging.UULog
+import com.silverpine.uu.logging.logException
 import java.io.ByteArrayInputStream
 import java.security.KeyFactory
 import java.security.KeyStore
@@ -13,6 +14,8 @@ import java.security.spec.PKCS8EncodedKeySpec
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
+
+private const val LOG_TAG = "UUClientCertSocketFactory"
 
 open class UUClientCertSocketFactory
 {
@@ -80,7 +83,7 @@ open class UUClientCertSocketFactory
         }
         catch (ex: Exception)
         {
-            UULog.d(javaClass, "getRSAPrivateKey", "", ex)
+            UULog.logException(LOG_TAG, "getRSAPrivateKey", ex)
             return null
         }
     }
@@ -96,7 +99,7 @@ open class UUClientCertSocketFactory
         }
         catch (ex: Exception)
         {
-            UULog.d(javaClass, "getX509Cert", "", ex)
+            UULog.logException(LOG_TAG, "getX509Cert", ex)
             return null
         }
     }

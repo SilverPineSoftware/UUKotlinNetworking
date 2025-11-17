@@ -7,7 +7,6 @@ import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.UURandom
 import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.core.uuUnzip
-import com.silverpine.uu.logging.UUConsoleLogger
 import com.silverpine.uu.logging.UULog
 import com.silverpine.uu.networking.UUBaseResponseHandler
 import com.silverpine.uu.networking.UUHttpMethod
@@ -34,6 +33,8 @@ import java.nio.file.Paths
 import java.util.concurrent.CountDownLatch
 import kotlin.io.path.absolutePathString
 
+private const val LOG_TAG = "UURawHttpTests"
+
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class UURawHttpTests
@@ -42,7 +43,7 @@ class UURawHttpTests
     @Before
     fun doBefore()
     {
-        UULog.init(UUConsoleLogger())
+        TestLogger.init()
 
         UUJson.init(
             UUKotlinXJsonProvider(Json()
@@ -190,7 +191,7 @@ class UURawHttpTests
         Files.walk(path)
             .forEach()
             {
-                UULog.d(javaClass, "printZip", it.absolutePathString())
+                UULog.debug(LOG_TAG, "printZip,  ${it.absolutePathString()}")
             }
     }
 

@@ -8,7 +8,6 @@ import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.UURandom
 import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.core.uuUtf8
-import com.silverpine.uu.logging.UUConsoleLogger
 import com.silverpine.uu.logging.UULog
 import com.silverpine.uu.networking.UUHttpHeader
 import com.silverpine.uu.networking.UUHttpLoggingMode
@@ -37,6 +36,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
+private const val LOG_TAG = "UUHttpSessionTests"
+
 @Keep
 @Serializable
 class GetModel
@@ -59,7 +60,7 @@ class UUHttpSessionTests
     @Before
     fun doBefore()
     {
-        UULog.init(UUConsoleLogger())
+        TestLogger.init()
 
         UUJson.init(
             UUKotlinXJsonProvider(Json()
@@ -88,7 +89,7 @@ class UUHttpSessionTests
     {
         val obj = TestApiObject("1234", "UnitTest", "Data here")
         val json = UUJson.toJson(obj, obj.javaClass)
-        UULog.d(javaClass, "test_objectSerialization", "JSON: $json")
+        UULog.debug(LOG_TAG, "test_objectSerialization, JSON: $json")
     }
 
     @Test
@@ -96,7 +97,7 @@ class UUHttpSessionTests
     {
         val obj = TestApiError(1234, "UnitTest")
         val json = UUJson.toJson(obj, obj.javaClass)
-        UULog.d(javaClass, "test_errorSerialization", "JSON: $json")
+        UULog.debug(LOG_TAG, "test_errorSerialization, JSON: $json")
     }
 
     @Test
@@ -104,7 +105,7 @@ class UUHttpSessionTests
     {
         val obj = TestModel().apply { id = "1234"; name = "Unit Test"; level = 57; xp = 99; }
         val json = UUJson.toJson(obj, obj.javaClass)
-        UULog.d(javaClass, "test_errorSerialization", "JSON: $json")
+        UULog.debug(LOG_TAG, "test_errorSerialization, JSON: $json")
     }
 
     @Test
@@ -120,7 +121,7 @@ class UUHttpSessionTests
         val success = UUAssert.unwrap(response.parsedResponse)
         assert(success is ByteArray)
         val bytes = UUAssert.unwrap(success as? ByteArray)
-        UULog.d(javaClass, "test_0000_simple_get", "Success: ${bytes.uuUtf8().getOrNull()}")
+        UULog.debug(LOG_TAG, "test_0000_simple_get, Success: ${bytes.uuUtf8().getOrNull()}")
     }
 
     @Test
@@ -144,7 +145,7 @@ class UUHttpSessionTests
 
         val success = UUAssert.unwrap(response.parsedResponse)
         assert(success is Array<*> && success.isArrayOf<TestModel>())
-        UULog.d(javaClass, "test_0001_get_list", "Success: $success")
+        UULog.debug(LOG_TAG, "test_0001_get_list, Success: $success")
     }
 
     @Test
@@ -172,7 +173,7 @@ class UUHttpSessionTests
 
         val success = UUAssert.unwrap(response.parsedResponse)
         assert(success is TestModel)
-        UULog.d(javaClass, "test_0002_simple_echo_post", "Success: $success")
+        UULog.debug(LOG_TAG, "test_0002_simple_echo_post, Success: $success")
     }
 
     @Test
@@ -189,7 +190,7 @@ class UUHttpSessionTests
         val success = UUAssert.unwrap(response.parsedResponse)
         assert(success is ByteArray)
         val bytes = UUAssert.unwrap(success as? ByteArray)
-        UULog.d(javaClass, "test_0003_get_object", "Success: ${bytes.uuUtf8().getOrNull()}")
+        UULog.debug(LOG_TAG, "test_0003_get_object, Success: ${bytes.uuUtf8().getOrNull()}")
     }
 
     @Test
@@ -208,7 +209,7 @@ class UUHttpSessionTests
         val success = UUAssert.unwrap(response.parsedResponse)
         assert(success is ByteArray)
         val bytes = UUAssert.unwrap(success as? ByteArray)
-        UULog.d(javaClass, "test_0004_get_object_gzip", "Success: ${bytes.uuUtf8().getOrNull()}")
+        UULog.debug(LOG_TAG, "test_0004_get_object_gzip, Success: ${bytes.uuUtf8().getOrNull()}")
     }
 
     @Test
@@ -227,7 +228,7 @@ class UUHttpSessionTests
         val success = UUAssert.unwrap(response.parsedResponse)
         assert(success is ByteArray)
         val bytes = UUAssert.unwrap(success as? ByteArray)
-        UULog.d(javaClass, "test_0005_get_object_deflate", "Success: ${bytes.uuUtf8().getOrNull()}")
+        UULog.debug(LOG_TAG, "test_0005_get_object_deflate, Success: ${bytes.uuUtf8().getOrNull()}")
     }
 
     @Test
@@ -246,7 +247,7 @@ class UUHttpSessionTests
         val success = UUAssert.unwrap(response.parsedResponse)
         assert(success is ByteArray)
         val bytes = UUAssert.unwrap(success as? ByteArray)
-        UULog.d(javaClass, "test_0005_get_with_error", "Error: ${bytes.uuUtf8().getOrNull()}")
+        UULog.debug(LOG_TAG, "test_0005_get_with_error, Error: ${bytes.uuUtf8().getOrNull()}")
     }
 
     @OptIn(ExperimentalAtomicApi::class)

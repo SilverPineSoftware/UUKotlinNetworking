@@ -2,11 +2,14 @@ package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.uuSafeClose
 import com.silverpine.uu.logging.UULog
+import com.silverpine.uu.logging.logException
 import java.io.BufferedOutputStream
 import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.Proxy
 import java.net.URL
+
+private const val LOG_TAG = "UUHttpURLConnection"
 
 fun HttpURLConnection.uuSetHeaders(headers: UUHttpHeaders)
 {
@@ -61,6 +64,6 @@ fun HttpURLConnection.uuSafeDisconnect()
     }
     catch (ex: Exception)
     {
-        UULog.d(javaClass, "uuSafeDisconnect", "", ex)
+        UULog.logException(LOG_TAG, "uuSafeDisconnect", ex)
     }
 }
