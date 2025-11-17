@@ -89,3 +89,4 @@ lint/tmp/
 .DS_Store
 /.idea/inspectionProfiles
 /.idea/deploymentTargetSelector.xml
+/.kotlin
