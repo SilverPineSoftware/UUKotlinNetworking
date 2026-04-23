@@ -16,7 +16,7 @@ import com.silverpine.uu.networking.UUHttpRequest
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.UUHttpSession
 import com.silverpine.uu.networking.UUJsonBody
-import com.silverpine.uu.networking.UUTypedResponseHandler
+import com.silverpine.uu.networking.handlers.UUTypedResponseHandler
 import com.silverpine.uu.test.UUAssert
 import com.silverpine.uu.test.uuRandomLetters
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -111,7 +111,7 @@ class UUHttpSessionTests
     @Test
     fun test_0000_simple_get()
     {
-        val uri = "https://spsw.io/uu/echo_json.php"
+        val uri = "${TestConfig.BASE_URL}/echo_json.php"
         val request = UUHttpRequest(uri)
         val session = UUHttpSession()
 
@@ -127,7 +127,7 @@ class UUHttpSessionTests
     @Test
     fun test_0001_get_list()
     {
-        val uri = "https://spsw.io/uu/echo_json.php?id=foo&name=bar&level=1&xp=57"
+        val uri = "${TestConfig.BASE_URL}/echo_json.php?id=foo&name=bar&level=1&xp=57"
 
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.GET
@@ -151,7 +151,7 @@ class UUHttpSessionTests
     @Test
     fun test_0002_simple_echo_post()
     {
-        val uri = "https://spsw.io/uu/echo_json_post.php"
+        val uri = "${TestConfig.BASE_URL}/echo_json_post.php"
 
         val model = TestModel()
         model.id = UURandom.uuid()
@@ -179,7 +179,7 @@ class UUHttpSessionTests
     @Test
     fun test_0003_get_object()
     {
-        val uri = "https://spsw.io/uu/get_object.php"
+        val uri = "${TestConfig.BASE_URL}/get_object.php"
         val request = UUHttpRequest(uri)
         request.loggingMode = UUHttpLoggingMode.Verbose
         val session = UUHttpSession()
@@ -196,7 +196,7 @@ class UUHttpSessionTests
     @Test
     fun test_0004_get_object_gzip()
     {
-        val uri = "https://spsw.io/uu/get_object.php"
+        val uri = "${TestConfig.BASE_URL}/get_object.php"
         val request = UUHttpRequest(uri)
         request.headers.put(UUHttpHeader.AcceptEncoding, "gzip")
         request.loggingMode = UUHttpLoggingMode.Verbose
@@ -215,7 +215,7 @@ class UUHttpSessionTests
     @Test
     fun test_0005_get_object_deflate()
     {
-        val uri = "https://spsw.io/uu/get_object.php"
+        val uri = "${TestConfig.BASE_URL}/get_object.php"
         val request = UUHttpRequest(uri)
         request.headers.put(UUHttpHeader.AcceptEncoding, "deflate")
         request.loggingMode = UUHttpLoggingMode.Verbose
@@ -234,7 +234,7 @@ class UUHttpSessionTests
     @Test
     fun test_0005_get_with_error()
     {
-        val uri = "https://spsw.io/uu/echo_json.php?error=Failed&errorMessage=RequestFailed"
+        val uri = "${TestConfig.BASE_URL}/echo_json.php?error=Failed&errorMessage=RequestFailed"
         val request = UUHttpRequest(uri)
         request.headers.putSingle("uu-status-code", "400")
         request.loggingMode = UUHttpLoggingMode.Verbose

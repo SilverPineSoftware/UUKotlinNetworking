@@ -5,6 +5,8 @@ import com.silverpine.uu.core.uuFormatAsRfc3339
 import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
 import com.silverpine.uu.networking.connectivity.UUConnectivity
 import com.silverpine.uu.networking.connectivity.UUConnectivityProvider
+import com.silverpine.uu.networking.handlers.UUBaseResponseHandler
+import com.silverpine.uu.networking.handlers.UUHttpResponseHandler
 import java.net.CookieHandler
 import java.net.Proxy
 import java.net.URL

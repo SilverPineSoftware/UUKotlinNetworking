@@ -1,7 +1,5 @@
-package com.silverpine.uu.networking
+package com.silverpine.uu.networking.parsers
 
-import com.silverpine.uu.core.UUJson
-import com.silverpine.uu.core.uuReadAll
 import java.io.InputStream
 import java.net.HttpURLConnection
 
@@ -11,41 +9,6 @@ fun interface UUHttpStreamParser
         stream: InputStream,
         response: HttpURLConnection
     ): Any?
-}
-
-open class UUBinaryStreamParser: UUHttpStreamParser
-{
-    override fun parse(
-        stream: InputStream,
-        response: HttpURLConnection
-    ): Any?
-    {
-        return stream.uuReadAll()
-    }
-}
-
-class UUTextResponseParser: UUHttpStreamParser
-{
-    override fun parse(stream: InputStream, response: HttpURLConnection): Any?
-    {
-        //response.contentType
-        //response.contentEncoding
-
-        // Encoding and Charset
-        val bytes = stream.uuReadAll() ?: return null
-        return String(bytes)
-    }
-}
-
-open class UUTypedStreamParser<DataType: Any>(private val objectClass: Class<DataType>): UUHttpStreamParser
-{
-    override fun parse(
-        stream: InputStream,
-        response: HttpURLConnection
-    ): Any?
-    {
-        return UUJson.fromStream(stream, objectClass).getOrNull()
-    }
 }
 
 

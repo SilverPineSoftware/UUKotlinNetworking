@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUResult
+import com.silverpine.uu.networking.handlers.UUFileResponseHandler
 import java.io.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine

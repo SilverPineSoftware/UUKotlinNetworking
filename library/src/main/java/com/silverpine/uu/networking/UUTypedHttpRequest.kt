@@ -1,6 +1,7 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
+import com.silverpine.uu.networking.handlers.UUTypedResponseHandler
 import java.net.CookieHandler
 import java.net.Proxy
 import javax.net.ssl.HostnameVerifier

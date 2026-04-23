@@ -1,4 +1,4 @@
-package com.silverpine.uu.networking
+package com.silverpine.uu.networking.parsers
 
 import com.silverpine.uu.core.uuCopyTo
 import java.io.File
