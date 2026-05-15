@@ -31,7 +31,7 @@ jobs:
     uses: SilverPineSoftware/UUGithubActions/.github/workflows/uu_android_instrumented_tests.yml@main
     with:
       module_name: 'library'
-      configuration: 'quickGroupNet'
+      configuration: 'quickNetGroup'
       build_suffix: ${{ needs.get-build-suffix.outputs.build_suffix }}
     secrets:
       READ_PACKAGES_PAT: ${{ secrets.CI_READ_PACKAGES_GITHUB_TOKEN }}
