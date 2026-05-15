@@ -29,8 +29,6 @@ mockito_kotlin = "6.3.0"
 espresso_core = "3.7.0"
 kotlin_test = "2.2.10"
 
-# uu — uu_build selects com.silverpine.uu:uu-kotlin-build-catalog (Silverpine plugin ids + AGP/Kotlin/Nexus live in that catalog).
-uu_build = "0.0.25"
 uu_core = "0.0.28"
 uu_test = "0.0.20"
 
