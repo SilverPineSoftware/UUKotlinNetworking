@@ -1,7 +1,7 @@
 plugins {
     alias(uuBuild.plugins.uu.library.app)
     alias(uuBuild.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlin.compose)
+    alias(uuBuild.plugins.kotlin.compose)
 }
 
 composeCompiler {
@@ -15,7 +15,7 @@ dependencies {
     implementation(libs.androidx.annotation.experimental)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.google.material)
-    implementation(libs.kotlinx.serialization.json)
+    implementation(uuBuild.kotlinx.serialization.json)
     implementation(libs.uu.core.ktx)
     implementation(project(":library"))
 
@@ -29,8 +29,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation.layout.android)
     implementation(libs.androidx.compose.material3.android)
 
-    testImplementation(libs.junit4)
+    //testImplementation(libs.junit4)
 
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(uuBuild.androidx.junit)
+    androidTestImplementation(uuBuild.androidx.espresso.core)
 }
