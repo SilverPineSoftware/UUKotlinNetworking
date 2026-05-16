@@ -16,6 +16,7 @@ import com.silverpine.uu.networking.UUHttpSession
 import com.silverpine.uu.networking.parsers.UUHttpStreamParser
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.handlers.UUTypedResponseHandler
+import com.silverpine.uu.test.instrumented.annotations.UUIntegrationTest
 import com.silverpine.uu.test.uuRandomLetters
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -37,6 +38,7 @@ private const val LOG_TAG = "UURawHttpTests"
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@UUIntegrationTest
 class UURawHttpTests
 {
     @OptIn(ExperimentalSerializationApi::class)

@@ -11,6 +11,7 @@ import com.silverpine.uu.logging.UULogger
 import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.uuIsHttpSuccess
 import com.silverpine.uu.test.UUAssert
+import com.silverpine.uu.test.instrumented.annotations.UUIntegrationTest
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -28,6 +29,7 @@ private const val LOG_TAG = "UURemoteApiTests"
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@UUIntegrationTest
 class UURemoteApiTests
 {
     private val api: ITestApi = TestApi(TestConfig.ECHO_SERVER_URL)

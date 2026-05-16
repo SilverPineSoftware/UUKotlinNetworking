@@ -18,6 +18,7 @@ import com.silverpine.uu.networking.UUHttpSession
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.handlers.UUTypedResponseHandler
 import com.silverpine.uu.test.UUAssert
+import com.silverpine.uu.test.instrumented.annotations.UUIntegrationTest
 import com.silverpine.uu.test.uuRandomLetters
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -54,6 +55,7 @@ class GetModel
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@UUIntegrationTest
 class UUHttpSessionTests
 {
     @OptIn(ExperimentalSerializationApi::class)

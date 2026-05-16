@@ -3,6 +3,8 @@ package com.silverpine.uu.networking.test
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.silverpine.uu.networking.UUHttpRequest
+import com.silverpine.uu.test.instrumented.annotations.UUIntegrationTest
+import com.silverpine.uu.test.instrumented.annotations.UUInteractionRequired
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.FixMethodOrder
@@ -13,6 +15,7 @@ import java.net.URL
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@UUIntegrationTest
 class UUHttpRequestTests
 {
 
