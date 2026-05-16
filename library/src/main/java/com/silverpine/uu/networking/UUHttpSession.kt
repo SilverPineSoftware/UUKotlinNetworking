@@ -1,36 +1,27 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUError
-import com.silverpine.uu.core.UUObjectBlock
 import com.silverpine.uu.core.UUResult
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.net.CookieHandler
 import java.net.HttpURLConnection
 import javax.net.ssl.HttpsURLConnection
 
-open class UUHttpSession()
+open class UUHttpSession
 {
-    open fun executeRequest(request: UUHttpRequest, completion: UUObjectBlock<UUHttpResponse>)
+    /*open fun executeRequest(request: UUHttpRequest, completion: UUObjectBlock<UUHttpResponse>)
     {
         CoroutineScope(Dispatchers.IO).launch()
         {
             val response = doOneRequest(request)
             completion(response)
         }
-    }
+    }*/
 
     open fun cancelAll()
     {
     }
 
-    private fun changeState(request: UUHttpRequest, state: UUHttpRequest.State)
-    {
-        request.state = state
-    }
-
-    private suspend fun doOneRequest(request: UUHttpRequest): UUHttpResponse
+    suspend fun executeRequest(request: UUHttpRequest): UUHttpResponse
     {
         var urlConnection: HttpURLConnection? = null
 
@@ -63,7 +54,7 @@ open class UUHttpSession()
 
             preparedBody?.second?.entries?.forEach()
             { entry ->
-                request.headers.put(entry.key, entry.value)
+                request.headers[entry.key] = entry.value
             }
 
             UUHttpLogging.logHeaders(request, UUHttpLoggingMode.RequestHeaders, request.headers)
@@ -119,18 +110,15 @@ open class UUHttpSession()
 
     open fun openConnection(request: UUHttpRequest): UUResult<HttpURLConnection>
     {
-        var result: UUResult<HttpURLConnection>? = null
+        var result: UUResult<HttpURLConnection>?
 
         try
         {
             val url = request.toURL
 
-            var urlConnection = url.uuOpenConnection(request.proxy)
-
-            if (urlConnection == null)
-            {
-                return UUResult.failure(UUHttpError.create(UUHttpErrorCode.OpenConnectionFailure))
-            }
+            val urlConnection = url.uuOpenConnection(request.proxy) ?: return UUResult.failure(
+                UUHttpError.create(UUHttpErrorCode.OpenConnectionFailure)
+            )
 
             urlConnection.useCaches = request.useCaches
             urlConnection.defaultUseCaches = request.defaultUseCaches
@@ -173,13 +161,18 @@ open class UUHttpSession()
 
     open suspend fun handleResponse(request: UUHttpRequest, urlConnection: HttpURLConnection): UUHttpResponse
     {
-        try
+        return try
         {
-            return request.responseHandler.handleResponse(request, urlConnection)
+            request.responseHandler.handleResponse(request, urlConnection)
         }
         catch (ex: Exception)
         {
-            return UUHttpResponse(request = request, error = UUHttpError.fromException(UUHttpErrorCode.HandleResponseException, ex))
+            UUHttpResponse(request = request, error = UUHttpError.fromException(UUHttpErrorCode.HandleResponseException, ex))
         }
+    }
+
+    open suspend fun changeState(request: UUHttpRequest, state: UUHttpRequest.State)
+    {
+        request.state = state
     }
 }

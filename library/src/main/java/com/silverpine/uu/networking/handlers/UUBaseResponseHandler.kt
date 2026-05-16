@@ -9,11 +9,13 @@ import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.parsers.UUBinaryStreamParser
 import com.silverpine.uu.networking.parsers.UUHttpStreamParser
 import com.silverpine.uu.networking.uuIsHttpSuccess
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.util.zip.GZIPInputStream
 import java.util.zip.InflaterInputStream
 
-open class UUBaseResponseHandler() : UUHttpResponseHandler
+open class UUBaseResponseHandler : UUHttpResponseHandler
 {
     override suspend fun handleResponse(request: UUHttpRequest, urlConnection: HttpURLConnection): UUHttpResponse
     {
@@ -32,7 +34,12 @@ open class UUBaseResponseHandler() : UUHttpResponseHandler
 
             when (urlConnection.contentEncoding?.lowercase())
             {
-                "gzip" -> readStream = GZIPInputStream(readStream)
+                "gzip" -> readStream =
+                    withContext(Dispatchers.IO)
+                    {
+                        GZIPInputStream(readStream)
+                    }
+
                 "deflate" -> readStream = InflaterInputStream(readStream)
             }
 

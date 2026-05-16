@@ -1,8 +1,6 @@
 package com.silverpine.uu.networking.test
 
-import androidx.annotation.Keep
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.silverpine.uu.core.UUDate
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UUKotlinXJsonProvider
 import com.silverpine.uu.core.UURandom
@@ -13,15 +11,14 @@ import com.silverpine.uu.networking.UUHttpHeader
 import com.silverpine.uu.networking.UUHttpLoggingMode
 import com.silverpine.uu.networking.UUHttpMethod
 import com.silverpine.uu.networking.UUHttpRequest
-import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.UUHttpSession
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.handlers.UUTypedResponseHandler
 import com.silverpine.uu.test.UUAssert
 import com.silverpine.uu.test.instrumented.annotations.UUIntegrationTest
 import com.silverpine.uu.test.uuRandomLetters
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import org.junit.After
@@ -32,13 +29,10 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.atomics.AtomicReference
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 private const val LOG_TAG = "UUHttpSessionTests"
 
+/*
 @Keep
 @Serializable
 class GetModel
@@ -51,7 +45,7 @@ class GetModel
     {
         return "id: $id, name: $name, data: $data"
     }
-}
+}*/
 
 @RunWith(AndroidJUnit4::class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -111,13 +105,13 @@ class UUHttpSessionTests
     }
 
     @Test
-    fun test_0000_simple_get()
+    fun test_0000_simple_get() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/echo_json.php"
         val request = UUHttpRequest(uri)
         val session = UUHttpSession()
 
-        val response = doRequest(session, request)
+        val response = session.executeRequest(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -127,7 +121,7 @@ class UUHttpSessionTests
     }
 
     @Test
-    fun test_0001_get_list()
+    fun test_0001_get_list() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/echo_json.php?id=foo&name=bar&level=1&xp=57"
 
@@ -138,11 +132,11 @@ class UUHttpSessionTests
         val count = 3
         request.headers.putSingle("uu-return-object-count", "$count")
 
-        request.responseHandler = UUTypedResponseHandler<Array<TestModel>, Void>(Array<TestModel>::class.java, Void::class.java)
+        request.responseHandler = UUTypedResponseHandler(Array<TestModel>::class.java, Void::class.java)
 
         val session = UUHttpSession()
 
-        val response = doRequest(session, request)
+        val response = session.executeRequest(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -151,7 +145,7 @@ class UUHttpSessionTests
     }
 
     @Test
-    fun test_0002_simple_echo_post()
+    fun test_0002_simple_echo_post() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/echo_json_post.php"
 
@@ -166,11 +160,11 @@ class UUHttpSessionTests
         request.body = UUJsonBody(model)
         request.loggingMode = UUHttpLoggingMode.Verbose
 
-        request.responseHandler = UUTypedResponseHandler<TestModel, Void>(TestModel::class.java, Void::class.java)
+        request.responseHandler = UUTypedResponseHandler(TestModel::class.java, Void::class.java)
 
         val session = UUHttpSession()
 
-        val response = doRequest(session, request)
+        val response = session.executeRequest(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -179,14 +173,14 @@ class UUHttpSessionTests
     }
 
     @Test
-    fun test_0003_get_object()
+    fun test_0003_get_object() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/get_object.php"
         val request = UUHttpRequest(uri)
         request.loggingMode = UUHttpLoggingMode.Verbose
         val session = UUHttpSession()
 
-        val response = doRequest(session, request)
+        val response = session.executeRequest(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -196,7 +190,7 @@ class UUHttpSessionTests
     }
 
     @Test
-    fun test_0004_get_object_gzip()
+    fun test_0004_get_object_gzip() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/get_object.php"
         val request = UUHttpRequest(uri)
@@ -205,7 +199,7 @@ class UUHttpSessionTests
 
         val session = UUHttpSession()
 
-        val response = doRequest(session, request)
+        val response = session.executeRequest(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -215,7 +209,7 @@ class UUHttpSessionTests
     }
 
     @Test
-    fun test_0005_get_object_deflate()
+    fun test_0005_get_object_deflate() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/get_object.php"
         val request = UUHttpRequest(uri)
@@ -224,7 +218,7 @@ class UUHttpSessionTests
 
         val session = UUHttpSession()
 
-        val response = doRequest(session, request)
+        val response = session.executeRequest(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -234,7 +228,7 @@ class UUHttpSessionTests
     }
 
     @Test
-    fun test_0005_get_with_error()
+    fun test_0005_get_with_error() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/echo_json.php?error=Failed&errorMessage=RequestFailed"
         val request = UUHttpRequest(uri)
@@ -242,7 +236,7 @@ class UUHttpSessionTests
         request.loggingMode = UUHttpLoggingMode.Verbose
         val session = UUHttpSession()
 
-        val response = doRequest(session, request)
+        val response = session.executeRequest(request)
         Assert.assertNotNull(response.error)
         assertEquals(400, response.httpStatusCode)
 
@@ -250,22 +244,5 @@ class UUHttpSessionTests
         assert(success is ByteArray)
         val bytes = UUAssert.unwrap(success as? ByteArray)
         UULog.debug(LOG_TAG, "test_0005_get_with_error, Error: ${bytes.uuUtf8().getOrNull()}")
-    }
-
-    @OptIn(ExperimentalAtomicApi::class)
-    private fun doRequest(session: UUHttpSession, request: UUHttpRequest, timeout: Long = UUDate.Constants.MILLIS_IN_ONE_SECOND * 30): UUHttpResponse
-    {
-        val latch = CountDownLatch(1)
-        val responseContainer = AtomicReference<UUHttpResponse?>(null)
-
-        session.executeRequest(request)
-        { response ->
-            responseContainer.store(response)
-            latch.countDown()
-        }
-
-        latch.await(timeout, TimeUnit.MILLISECONDS)
-        val response = UUAssert.unwrap(responseContainer.load())
-        return response
     }
 }

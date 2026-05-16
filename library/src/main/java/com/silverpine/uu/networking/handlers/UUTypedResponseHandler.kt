@@ -8,6 +8,6 @@ open class UUTypedResponseHandler<SuccessType: Any, ErrorType: Any>(
     errorClass: Class<ErrorType>
 ): UUBaseResponseHandler()
 {
-    override val successParser: UUHttpStreamParser = UUTypedStreamParser<SuccessType>(successClass)
-    override val errorParser: UUHttpStreamParser = UUTypedStreamParser<ErrorType>(errorClass)
+    override val successParser: UUHttpStreamParser = UUTypedStreamParser(successClass)
+    override val errorParser: UUHttpStreamParser = UUTypedStreamParser(errorClass)
 }
