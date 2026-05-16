@@ -29,8 +29,6 @@ dependencies {
     implementation(libs.androidx.compose.foundation.layout.android)
     implementation(libs.androidx.compose.material3.android)
 
-    //testImplementation(libs.junit4)
-
     androidTestImplementation(uuBuild.androidx.junit)
     androidTestImplementation(uuBuild.androidx.espresso.core)
 }
