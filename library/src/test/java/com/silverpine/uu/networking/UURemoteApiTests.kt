@@ -30,10 +30,17 @@ class UURemoteApiTests
     private fun successResponse(request: UUHttpRequest, body: Any? = "ok"): UUHttpResponse =
         UUHttpResponse(request = request, parsedResponse = body)
 
+    /**
+     * Auth-failure response for unit tests. Uses [UUError] directly (no [Bundle]) because JVM
+     * unit tests do not provide Android framework stubs for [android.os.Bundle].
+     */
     private fun authNeededResponse(request: UUHttpRequest): UUHttpResponse =
         UUHttpResponse(
             request = request,
-            error = UUHttpError.create(UUHttpErrorCode.AUTHORIZATION_NEEDED),
+            error = UUError(
+                code = UUNetworkErrorCode.AUTHORIZATION_NEEDED.value,
+                domain = UUNetworkError.DOMAIN,
+            ),
         )
 
     /**
@@ -229,7 +236,7 @@ class UURemoteApiTests
             val response = api.executeAuthorizedRequest(request)
 
             assertNotNull(response.error)
-            assertEquals(UUHttpErrorCode.AUTHORIZATION_NEEDED, response.error?.uuErrorCode())
+            assertEquals(UUNetworkErrorCode.AUTHORIZATION_NEEDED, response.error?.uuNetworkErrorCode())
             assertEquals(1, api.renewCallCount.get())
             assertEquals(1, executeCount.get())
         }

@@ -1,11 +1,11 @@
 package com.silverpine.uu.networking.handlers
 
 import com.silverpine.uu.core.UUError
-import com.silverpine.uu.networking.UUHttpError
-import com.silverpine.uu.networking.UUHttpErrorCode
 import com.silverpine.uu.networking.UUHttpLogging
 import com.silverpine.uu.networking.UUHttpRequest
 import com.silverpine.uu.networking.UUHttpResponse
+import com.silverpine.uu.networking.UUNetworkError
+import com.silverpine.uu.networking.UUNetworkErrorCode
 import com.silverpine.uu.networking.parsers.UUBinaryStreamParser
 import com.silverpine.uu.networking.parsers.UUHttpStreamParser
 import com.silverpine.uu.networking.uuIsHttpSuccess
@@ -55,7 +55,7 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
         {
             return UUHttpResponse(
                 request = request,
-                error = UUHttpError.fromException(UUHttpErrorCode.READ_FAILED, ex)
+                error = UUNetworkError.fromException(UUNetworkErrorCode.READ_FAILED, ex, request)
             )
         }
     }
@@ -81,7 +81,7 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
         if (err == null && !httpStatusCode.uuIsHttpSuccess())
         {
             val jsonResponse: String? = null  // from parsed response
-            err = UUHttpError.create(request, httpStatusCode, jsonResponse)
+            err = UUNetworkError.create(request, httpStatusCode, jsonResponse)
         }
 
         val uuResponse = UUHttpResponse(

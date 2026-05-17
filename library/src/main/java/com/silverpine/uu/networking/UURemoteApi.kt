@@ -1,5 +1,6 @@
 package com.silverpine.uu.networking
 
+import com.silverpine.uu.core.UUError
 import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -146,10 +147,12 @@ open class UURemoteApi(
      *
      * Default behavior is to return true if the error code is authorizationNeeded.
      */
-    open suspend fun shouldRenewApiAuthorization(error: com.silverpine.uu.core.UUError): Boolean
+    open suspend fun shouldRenewApiAuthorization(error: UUError): Boolean
     {
-        val errorCode = error.uuErrorCode() ?: return false
-        return errorCode == UUHttpErrorCode.AUTHORIZATION_NEEDED
+        //return error.httpErrorCode == UUHttpErrorCode.AUTHORIZATION_NEEDED
+
+        val errorCode = error.uuNetworkErrorCode() ?: return false
+        return errorCode == UUNetworkErrorCode.AUTHORIZATION_NEEDED
     }
 
     open suspend fun cancelAll()

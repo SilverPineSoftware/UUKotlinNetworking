@@ -22,7 +22,7 @@ class UURemoteImage(
         LoadBitmapFailed(1001)
     }
 
-    override suspend fun download(url: String): UUResult<Bitmap>
+    override suspend fun download(url: String): UUResult<Bitmap, UUError>
     {
         val request = UUHttpRequest(url).apply()
         {
@@ -45,7 +45,7 @@ class UURemoteImage(
         return UUResult.success(bmp)
     }
 
-    private fun failure(error: Error): UUResult<Bitmap>
+    private fun failure(error: Error): UUResult<Bitmap, UUError>
     {
         return UUResult.failure(UUError(error.code, ERROR_DOMAIN))
     }

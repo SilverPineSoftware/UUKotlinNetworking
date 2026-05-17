@@ -8,8 +8,8 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import androidx.core.content.ContextCompat
 import com.silverpine.uu.core.UUError
-import com.silverpine.uu.networking.UUHttpError
-import com.silverpine.uu.networking.UUHttpErrorCode
+import com.silverpine.uu.networking.UUNetworkError
+import com.silverpine.uu.networking.UUNetworkErrorCode
 
 /**
  * Default implementation of [UUConnectivityProvider] that uses Android's
@@ -18,9 +18,9 @@ import com.silverpine.uu.networking.UUHttpErrorCode
  *
  * This provider checks for:
  *  - **Captive portals** (e.g., hotel or public Wi-Fi login pages) and
- *    returns a [UUHttpError] with [UUHttpErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED].
+ *    returns a [UUNetworkError] with [UUNetworkErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED].
  *  - **Lack of internet validation** (no route to external network),
- *    returning a [UUHttpError] with [UUHttpErrorCode.NO_INTERNET].
+ *    returning a [UUNetworkError] with [UUNetworkErrorCode.NO_INTERNET].
  *
  * If the device appears connected and validated, `checkConnection()` returns `null`.
  * This allows callers to proceed with network operations without interruption.
@@ -41,8 +41,8 @@ import com.silverpine.uu.networking.UUHttpErrorCode
  *
  * @property context Android [Context] used to obtain the [ConnectivityManager].
  * @see UUConnectivityProvider
- * @see UUHttpError
- * @see UUHttpErrorCode
+ * @see UUNetworkError
+ * @see UUNetworkErrorCode
  */
 class UUNetworkConnectivityProvider(val context: Context) : UUConnectivityProvider
 {
@@ -58,13 +58,13 @@ class UUNetworkConnectivityProvider(val context: Context) : UUConnectivityProvid
 
         if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL))
         {
-            val error = UUHttpError.create(UUHttpErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED)
+            val error = UUNetworkError.makeError(UUNetworkErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED)
             return error
         }
 
         if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED))
         {
-            val error = UUHttpError.create(UUHttpErrorCode.NO_INTERNET)
+            val error = UUNetworkError.makeError(UUNetworkErrorCode.NO_INTERNET)
             return error
         }
 
@@ -104,80 +104,3 @@ class UUNetworkConnectivityProvider(val context: Context) : UUConnectivityProvid
         return result == PackageManager.PERMISSION_GRANTED
     }
 }
-
-
-
-/*
-
-class UUAndroidConnectivityProvider(val context: Context) : UUConnectivityProvider
-{
-    @SuppressLint("MissingPermission")
-    override fun getNetworkCapabilities(): NetworkCapabilities?
-    {
-        // Safely fail if we don't have the necessary permission
-        if (!hasAccessNetworkStatePermission())
-        {
-            return null
-        }
-
-        val cm: ConnectivityManager = context.getSystemService(ConnectivityManager::class.java)
-        val network = cm.activeNetwork
-        return cm.getNetworkCapabilities(network)
-    }
-
-    private fun hasAccessNetworkStatePermission(): Boolean
-    {
-        val result = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_NETWORK_STATE
-        )
-        return result == PackageManager.PERMISSION_GRANTED
-    }
-}
-
-fun Context.uuConnectivityProvider(): UUConnectivityProvider
-{
-    return UUAndroidConnectivityProvider(this)
-}
-
-object UUConnectivity: UUConnectivityProvider
-{
-    private var provider: UUConnectivityProvider? = null
-
-    fun init(provider: UUConnectivityProvider)
-    {
-        this.provider = provider
-    }
-
-    override fun getNetworkCapabilities(): NetworkCapabilities?
-    {
-        return provider?.getNetworkCapabilities()
-    }
-}*/
-
-/*
-@RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-fun Context.uuGetPortalStatus(): UUConnectivityStatus
-{
-    val cm = getSystemService(ConnectivityManager::class.java)
-    val network = cm.activeNetwork
-    val caps = cm.getNetworkCapabilities(network)
-
-    val hasInternet = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
-    val validated   = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
-    val captive     = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL) == true
-
-    return UUConnectivityStatus(hasInternet, validated, captive)
-}*/
-
-/*
-@RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-fun Context.uuLaunchCaptivePortalLogin()
-{
-    uuDispatchMain()
-    {
-        val intent = Intent(ConnectivityManager.ACTION_CAPTIVE_PORTAL_SIGN_IN)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(intent)
-    }
-}*/

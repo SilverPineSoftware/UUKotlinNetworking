@@ -8,15 +8,6 @@ import javax.net.ssl.HttpsURLConnection
 
 open class UUHttpSession
 {
-    /*open fun executeRequest(request: UUHttpRequest, completion: UUObjectBlock<UUHttpResponse>)
-    {
-        CoroutineScope(Dispatchers.IO).launch()
-        {
-            val response = doOneRequest(request)
-            completion(response)
-        }
-    }*/
-
     open fun cancelAll()
     {
     }
@@ -92,7 +83,7 @@ open class UUHttpSession
         }
         catch (ex: Exception)
         {
-            val error = UUHttpError.fromException(UUHttpErrorCode.UNDEFINED, ex)
+            val error = UUNetworkError.fromException(UUNetworkErrorCode.UNDEFINED, ex, request)
             UUHttpLogging.logError(request, error)
 
             return UUHttpResponse(request = request, error = error)
@@ -108,16 +99,16 @@ open class UUHttpSession
         return request.connectivityProvider?.checkConnection()
     }
 
-    open suspend fun openConnection(request: UUHttpRequest): UUResult<HttpURLConnection>
+    open suspend fun openConnection(request: UUHttpRequest): UUResult<HttpURLConnection, UUError>
     {
-        var result: UUResult<HttpURLConnection>?
+        var result: UUResult<HttpURLConnection, UUError>?
 
         try
         {
             val url = request.toURL
 
             val urlConnection = url.uuOpenConnection(request.proxy) ?: return UUResult.failure(
-                UUHttpError.create(UUHttpErrorCode.OPEN_CONNECTION_FAILURE)
+                UUNetworkError.makeError(UUNetworkErrorCode.OPEN_CONNECTION_FAILURE, request = request)
             )
 
             urlConnection.useCaches = request.useCaches
@@ -152,7 +143,7 @@ open class UUHttpSession
         }
         catch (ex: Exception)
         {
-            val error = UUHttpError.fromException(UUHttpErrorCode.OPEN_CONNECTION_FAILURE, ex)
+            val error = UUNetworkError.fromException(UUNetworkErrorCode.OPEN_CONNECTION_FAILURE, ex, request)
             result = UUResult.failure(error)
         }
 
@@ -167,7 +158,7 @@ open class UUHttpSession
         }
         catch (ex: Exception)
         {
-            UUHttpResponse(request = request, error = UUHttpError.fromException(UUHttpErrorCode.HANDLE_RESPONSE_EXCEPTION, ex))
+            UUHttpResponse(request = request, error = UUNetworkError.fromException(UUNetworkErrorCode.HANDLE_RESPONSE_EXCEPTION, ex, request))
         }
     }
 

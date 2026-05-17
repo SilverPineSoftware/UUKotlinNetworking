@@ -1,5 +1,6 @@
 package com.silverpine.uu.networking
 
+import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUJson
 import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.core.uuUtf8ByteArray
@@ -18,13 +19,13 @@ open class UUHttpBody(var contentType: String, var contentEncoding: String? = nu
         return content
     }
 
-    open fun prepareToSend(): UUResult<Pair<ByteArray, UUHttpHeaders>?>
+    open fun prepareToSend(): UUResult<Pair<ByteArray, UUHttpHeaders>?, UUError>
     {
         try
         {
             val encodedBody = encode() ?: run()
             {
-                return UUResult.failure(UUHttpError.create(UUHttpErrorCode.SERIALIZE_FAILURE))
+                return UUResult.failure(UUNetworkError.makeError(UUNetworkErrorCode.SERIALIZE_FAILURE))
             }
 
             val encodedBodyLength = encodedBody.size
@@ -36,13 +37,13 @@ open class UUHttpBody(var contentType: String, var contentEncoding: String? = nu
             else
             {
                 // No exceptions thrown but a non-null UUHttpBody object should result in a
-                // non null payload
-                return UUResult.failure(UUHttpError.create(UUHttpErrorCode.SERIALIZE_FAILURE))
+                // non-null payload
+                return UUResult.failure(UUNetworkError.makeError(UUNetworkErrorCode.SERIALIZE_FAILURE))
             }
         }
         catch (ex: Exception)
         {
-            return UUResult.failure(UUHttpError.fromException(UUHttpErrorCode.SERIALIZE_FAILURE, ex))
+            return UUResult.failure(UUNetworkError.fromException(UUNetworkErrorCode.SERIALIZE_FAILURE, ex, null))
         }
     }
 

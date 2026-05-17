@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.silverpine.uu.networking.UUHttpErrorCode
+import com.silverpine.uu.networking.UUNetworkErrorCode
 import com.silverpine.uu.sample.networking.PreviewPrefs
 import kotlinx.coroutines.launch
 
@@ -92,8 +92,8 @@ fun OpenAiScreen(
 
                         result.onFailure()
                         {
-                            val errorCode = UUHttpErrorCode.fromInt(result.errorOrNull()?.code ?: 0)
-                            if (errorCode == UUHttpErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED)
+                            val errorCode = UUNetworkErrorCode.fromInt(result.errorOrNull()?.code ?: 0)
+                            if (errorCode == UUNetworkErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED)
                             {
                                 // TODO: try to prompt for network login...
                             }
