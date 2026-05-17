@@ -52,7 +52,7 @@ class UUNetworkConnectivityProvider(val context: Context) : UUConnectivityProvid
      * @return a [UUError] representing a connectivity problem, or `null` if the
      *         network is connected and validated.
      */
-    override fun checkConnection(): UUError?
+    override suspend fun checkConnection(): UUError?
     {
         val caps = getNetworkCapabilities() ?: return null
 

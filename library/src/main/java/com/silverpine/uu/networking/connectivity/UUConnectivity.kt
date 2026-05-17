@@ -12,7 +12,7 @@ object UUConnectivity: UUConnectivityProvider
         this.provider = provider
     }
 
-    override fun checkConnection(): UUError?
+    override suspend fun checkConnection(): UUError?
     {
         return provider?.checkConnection()
     }

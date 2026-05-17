@@ -103,12 +103,12 @@ open class UUHttpSession
         }
     }
 
-    open fun checkConnection(request: UUHttpRequest): UUError?
+    open suspend fun checkConnection(request: UUHttpRequest): UUError?
     {
         return request.connectivityProvider?.checkConnection()
     }
 
-    open fun openConnection(request: UUHttpRequest): UUResult<HttpURLConnection>
+    open suspend fun openConnection(request: UUHttpRequest): UUResult<HttpURLConnection>
     {
         var result: UUResult<HttpURLConnection>?
 

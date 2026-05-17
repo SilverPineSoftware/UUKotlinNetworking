@@ -23,5 +23,5 @@ interface UUConnectivityProvider
      *
      * @return a [UUError] if no connection is available, or `null` if connected.
      */
-    fun checkConnection(): UUError?
+    suspend fun checkConnection(): UUError?
 }
