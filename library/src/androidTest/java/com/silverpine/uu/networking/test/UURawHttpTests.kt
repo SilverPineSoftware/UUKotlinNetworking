@@ -8,21 +8,23 @@ import com.silverpine.uu.core.UURandom
 import com.silverpine.uu.core.uuSleep
 import com.silverpine.uu.core.uuUnzip
 import com.silverpine.uu.logging.UULog
-import com.silverpine.uu.networking.handlers.UUBaseResponseHandler
 import com.silverpine.uu.networking.UUHttpMethod
 import com.silverpine.uu.networking.UUHttpRequest
-import com.silverpine.uu.networking.UUHttpResponse
 import com.silverpine.uu.networking.UUHttpSession
-import com.silverpine.uu.networking.parsers.UUHttpStreamParser
 import com.silverpine.uu.networking.UUJsonBody
+import com.silverpine.uu.networking.handlers.UUBaseResponseHandler
 import com.silverpine.uu.networking.handlers.UUTypedResponseHandler
+import com.silverpine.uu.networking.parsers.UUHttpStreamParser
 import com.silverpine.uu.test.instrumented.annotations.UUIntegrationTest
 import com.silverpine.uu.test.uuRandomLetters
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import org.junit.After
-import org.junit.Assert
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -31,7 +33,6 @@ import org.junit.runners.MethodSorters
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.concurrent.CountDownLatch
 import kotlin.io.path.absolutePathString
 
 private const val LOG_TAG = "UURawHttpTests"
@@ -67,28 +68,20 @@ class UURawHttpTests
     }
 
     @Test
-    fun test_0000_simple_get()
+    fun test_0000_simple_get() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/echo_json.php"
         val request = UUHttpRequest(uri)
         val session = UUHttpSession()
 
-        val latch = CountDownLatch(1)
-
-        var response: UUHttpResponse? = null
-        session.executeRequest(request)
-        {
-            response = it
-            latch.countDown()
-        }
-
-        latch.await()
-
-        Assert.assertNotNull(response)
+        val response = session.executeRequest(request)
+        assertNotNull(response)
+        assertNull(response.error)
     }
 
+
     @Test
-    fun test_0001_get_list()
+    fun test_0001_get_list() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/echo_json.php?id=foo&name=bar&level=1&xp=57"
 
@@ -98,29 +91,21 @@ class UURawHttpTests
 
         val count = 3
         request.headers.putSingle("uu-return-object-count", "$count")
-        request.responseHandler = UUTypedResponseHandler<Array<TestModel>, Void>(Array<TestModel>::class.java, Void::class.java)
+        request.responseHandler = UUTypedResponseHandler(Array<TestModel>::class.java, Void::class.java)
 
         val session = UUHttpSession()
 
-        val latch = CountDownLatch(1)
+        val response = session.executeRequest(request)
+        assertNotNull(response)
+        assertNull(response.error)
+        assertNotNull(response.parsedResponse)
 
-        var response: UUHttpResponse? = null
-        session.executeRequest(request)
-        {
-            response = it
-            latch.countDown()
-        }
-
-        latch.await()
-
-        Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.parsedResponse)
         //assert(response?.parsedResponse is Array<*> && response.parsedResponse.isArrayOf<TestModel>()<TestModel>())
         //Assert.assertTrue(response?.parsedResponse is Array<*> && response.parsedResponse.isArrayOf<TestModel>())
     }
 
     @Test
-    fun test_0002_simple_echo_post()
+    fun test_0002_simple_echo_post() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/echo_json_post.php"
 
@@ -133,28 +118,19 @@ class UURawHttpTests
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(model)
-        request.responseHandler = UUTypedResponseHandler<TestModel, Void>(TestModel::class.java, Void::class.java)
-
-        val latch = CountDownLatch(1)
+        request.responseHandler = UUTypedResponseHandler(TestModel::class.java, Void::class.java)
 
         val session = UUHttpSession()
 
-        var response: UUHttpResponse? = null
-        session.executeRequest(request)
-        {
-            response = it
-            latch.countDown()
-        }
-
-        latch.await()
-
-        Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.parsedResponse)
-        Assert.assertTrue(response?.parsedResponse is TestModel)
+        val response = session.executeRequest(request)
+        assertNotNull(response)
+        assertNull(response.error)
+        assertNotNull(response.parsedResponse)
+        assertTrue(response.parsedResponse is TestModel)
     }
 
     @Test
-    fun test_0003_download_zip()
+    fun test_0003_download_zip() = runBlocking()
     {
         val uri = "${TestConfig.BASE_URL}/downloads/zip_100.zip"
 
@@ -172,24 +148,15 @@ class UURawHttpTests
             }
         }
 
-        val latch = CountDownLatch(1)
-
         val session = UUHttpSession()
 
-        var response: UUHttpResponse? = null
-        session.executeRequest(request)
-        {
-            response = it
-            latch.countDown()
-        }
+        val response = session.executeRequest(request)
+        assertNotNull(response)
+        assertNull(response.error)
+        assertNotNull(response.parsedResponse)
+        assertTrue(response.parsedResponse is Path)
 
-        latch.await()
-
-        Assert.assertNotNull(response)
-        Assert.assertNotNull(response?.parsedResponse)
-        Assert.assertTrue(response?.parsedResponse is Path)
-
-        val path = response?.parsedResponse as? Path
+        val path = response.parsedResponse as? Path
         Files.walk(path)
             .forEach()
             {

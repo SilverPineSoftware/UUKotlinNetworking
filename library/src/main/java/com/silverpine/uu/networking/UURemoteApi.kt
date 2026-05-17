@@ -1,213 +1,226 @@
 package com.silverpine.uu.networking
 
-import com.silverpine.uu.core.UUError
-import com.silverpine.uu.core.UUObjectBlock
-import com.silverpine.uu.core.uuDispatch
 import com.silverpine.uu.networking.authorization.UUHttpAuthorizationProvider
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 open class UURemoteApi(
     var session: UUHttpSession = UUHttpSession(),
 )
 {
-    private var isAuthorizingFlag: Boolean = false
-    private var authorizeListeners: ArrayList<(Boolean, UUError?)->Unit> = arrayListOf()
-
     // AuthorizationProvider used if none is specified on a request
     var defaultAuthorizationProvider: UUHttpAuthorizationProvider? = null
 
-    fun executeAuthorizedRequest(
-        request: UUHttpRequest,
-        completion: UUObjectBlock<UUHttpResponse>)
-    {
-        renewApiAuthorizationIfNeeded()
-        { _, authorizationRenewalError ->
+    private val renewAuthorizationMutex = Mutex()
+    private var renewAuthorizationInFlight: Deferred<UURenewAuthorizationResponse>? = null
 
-            if (authorizationRenewalError != null)
+    suspend fun executeAuthorizedRequest(request: UUHttpRequest): UUHttpResponse
+    {
+        // 1) Renew authorization if needed
+        val renewal = renewApiAuthorizationIfNeeded()
+        renewal.error?.let()
+        {
+            // 2) If renewal fails, return immediately and do not attempt the original call
+            return UUHttpResponse(request = request, error = it)
+        }
+
+        // 3) Execute the request
+        var response = executeOneAuthorizedRequest(request)
+
+        // 4) If an error is returned and that error indicates an authorization
+        // renewal is warranted, then attempt authorization renewal again.
+        val error = response.error
+        if (error != null && shouldRenewApiAuthorization(error))
+        {
+            // 5) Try an authorization renewal
+            val retryRenewal = internalRenewApiAuthorization()
+            retryRenewal.error?.let()
             {
-                val response = UUHttpResponse(
-                    request = request,
-                    error = authorizationRenewalError)
-                completion(response)
-                return@renewApiAuthorizationIfNeeded
+                // 6) Immediately return on error
+                return UUHttpResponse(request = request, error = it)
             }
 
-            executeOneAuthorizedRequest(request)
-            { response ->
-
-                response.error?.let()
-                { err ->
-
-                    if (shouldRenewApiAuthorization(err))
-                    {
-                        internalRenewApiAuthorization()
-                        { didAttempt, innerAuthorizationRenewalError ->
-
-                            innerAuthorizationRenewalError?.let()
-                            {
-                                val errorResponse = UUHttpResponse(request = request, error = innerAuthorizationRenewalError)
-                                completion(errorResponse)
-                            } ?: run()
-                            {
-                                if (didAttempt)
-                                {
-                                    executeOneAuthorizedRequest(request, completion)
-                                }
-                                else
-                                {
-                                    completion(response)
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        completion(response)
-                    }
-
-                } ?: run()
-                {
-                    completion(response)
-                }
+            // 7) If authorization renewal was attempted, then retry the request
+            if (retryRenewal.didAttempt)
+            {
+                response = executeOneAuthorizedRequest(request)
             }
         }
+
+        return response
     }
 
-    fun executeOneAuthorizedRequest(
+    /*fun executeAuthorizedRequest(
         request: UUHttpRequest,
-        completion: UUObjectBlock<UUHttpResponse>)
+        completion: UUObjectBlock<UUHttpResponse>,
+    )
+    {
+        uuDispatch {
+            val response = try
+            {
+                runBlocking { executeAuthorizedRequest(request) }
+            }
+            catch (ex: Exception)
+            {
+                UUHttpResponse(
+                    request = request,
+                    error = UUHttpError.fromException(UUHttpErrorCode.UNDEFINED, ex),
+                )
+            }
+            uuDispatchMain { completion(response) }
+        }
+    }*/
+
+    suspend fun executeOneAuthorizedRequest(
+        request: UUHttpRequest,
+    ): UUHttpResponse
     {
         if (request.authorizationProvider == null)
         {
             request.authorizationProvider = defaultAuthorizationProvider
         }
 
-        executeRequest(request, completion)
+        return executeRequest(request)
     }
 
     /**
      * Executes a single request with no authorization added
      *
      * @param request the request
-     * @param completion the callback
+     * @return the response
      */
-    fun executeRequest(
-        request: UUHttpRequest,
-        completion: UUObjectBlock<UUHttpResponse>)
+    suspend fun executeRequest(request: UUHttpRequest): UUHttpResponse
     {
-        session.executeRequest(request, completion)
+        return session.executeRequest(request)
     }
+
+    /*fun executeRequest(
+        request: UUHttpRequest,
+        completion: UUObjectBlock<UUHttpResponse>,
+    )
+    {
+        uuDispatch {
+            val response = try
+            {
+                runBlocking { executeRequest(request) }
+            }
+            catch (ex: Exception)
+            {
+                UUHttpResponse(
+                    request = request,
+                    error = UUHttpError.fromException(UUHttpErrorCode.UNDEFINED, ex),
+                )
+            }
+            uuDispatchMain { completion(response) }
+        }
+    }*/
 
     // MARK: Public Overridable Methods
 
     /**
-    Perform an api authorization/renewal.  Typically this means fetching a JWT from a server,.
-
-    Default behavior is to just return nil
+     * Perform an api authorization/renewal. Typically, this means fetching a JWT from a server.
+     *
+     * Default behavior is to return didAttempt = false with no error.
      */
-    open fun renewApiAuthorization(completion: (Boolean,UUError?)->Unit)
+    open suspend fun renewApiAuthorization(): UURenewAuthorizationResponse
     {
-        completion(false, null)
+        return UURenewAuthorizationResponse(false, null)
     }
 
     /**
-    Returns whether api authorization is needed ahead of making an actual api call.  Typically this means checking a JWT expiration
-
-    Default behavior is to return false
+     * Returns whether api authorization is needed ahead of making an actual api call.
+     * Typically, this means checking a JWT expiration.
+     *
+     * Default behavior is to return false.
      */
-    open fun isApiAuthorizationNeeded(completion: (Boolean)->Unit)
+    open suspend fun isApiAuthorizationNeeded(): Boolean
     {
-        completion(false)
+        return false
     }
 
     /**
-    Determines if api authorization is needed based on an Error
-
-    Default behavior is to return  true if the UUHttpSessionError is authorizationNeeded.
+     * Determines if api authorization is needed based on an Error.
+     *
+     * Default behavior is to return true if the error code is authorizationNeeded.
      */
-    open fun shouldRenewApiAuthorization(error: UUError): Boolean
+    open suspend fun shouldRenewApiAuthorization(error: com.silverpine.uu.core.UUError): Boolean
     {
         val errorCode = error.uuErrorCode() ?: return false
-        return (errorCode == UUHttpErrorCode.AUTHORIZATION_NEEDED)
+        return errorCode == UUHttpErrorCode.AUTHORIZATION_NEEDED
     }
 
-    open fun cancelAll()
+    open suspend fun cancelAll()
     {
         session.cancelAll()
     }
 
     // MARK: Private Implementation
 
-    private fun renewApiAuthorizationIfNeeded(completion: (Boolean, UUError?)->Unit)
+    private suspend fun renewApiAuthorizationIfNeeded(): UURenewAuthorizationResponse
     {
-        isApiAuthorizationNeeded()
-        { authorizationNeeded ->
-
-            if (authorizationNeeded)
-            {
-                internalRenewApiAuthorization(completion)
-            }
-            else
-            {
-                completion(false, null)
-            }
-        }
-    }
-
-    private fun internalRenewApiAuthorization(completion: (Boolean, UUError?)->Unit)
-    {
-        addAuthorizeListener(completion)
-
-        val isAuthorizing = isAuthorizing()
-
-        if (isAuthorizing)
+        return if (isApiAuthorizationNeeded())
         {
-            return
+            internalRenewApiAuthorization()
         }
-
-        setAuthorizing(true)
-
-        renewApiAuthorization()
-        { didAttempt, error ->
-            notifyAuthorizeListeners(didAttempt, error)
+        else
+        {
+            UURenewAuthorizationResponse(false, null)
         }
     }
 
-    @Synchronized
-    private fun setAuthorizing(value: Boolean)
-    {
-        isAuthorizingFlag = value
-    }
-
-    @Synchronized
-    private fun isAuthorizing(): Boolean
-    {
-        return isAuthorizingFlag
-    }
-
-    @Synchronized
-    private fun addAuthorizeListener(listener: (Boolean,UUError?)->Unit)
-    {
-        authorizeListeners.add(listener)
-    }
-
-    @Synchronized
-    private fun notifyAuthorizeListeners(didAttempt: Boolean, error: UUError?)
-    {
-        val listenersToNotify: ArrayList<(Boolean, UUError?)->Unit> = arrayListOf()
-        listenersToNotify.addAll(authorizeListeners)
-        authorizeListeners.clear()
-
-        // At this point, authorize is done, we have the response error,
-        // and if a new call to authorize comes in, we want it allow it
-        setAuthorizing(false)
-
-        listenersToNotify.forEach()
-        { listener ->
-
-            uuDispatch()
+    /**
+     * Coalesces concurrent renewal attempts: one [renewApiAuthorization] runs; other callers
+     * await the same [Deferred] result.
+     */
+    private suspend fun internalRenewApiAuthorization(): UURenewAuthorizationResponse =
+        coroutineScope()
+        {
+            // 1) If there is an active renewal happening, await it
+            renewAuthorizationInFlight?.takeIf()
             {
-                listener(didAttempt, error)
+                it.isActive
+            }?.let()
+            {
+                return@coroutineScope it.await()
+            }
+
+            // 2) Prepare an async block that will do the authorization renewal
+            val deferred = renewAuthorizationMutex.withLock()
+            {
+                renewAuthorizationInFlight?.takeIf()
+                { it.isActive
+                }?.let()
+                {
+                    return@withLock it
+                }
+
+                async()
+                {
+                    renewApiAuthorization()
+                }.also()
+                {
+                    renewAuthorizationInFlight = it
+                }
+            }
+
+            // 3) Await the renewal block
+            try
+            {
+                deferred.await()
+            }
+            finally
+            {
+                // 4) Clear the mutex
+                renewAuthorizationMutex.withLock()
+                {
+                    if (renewAuthorizationInFlight === deferred)
+                    {
+                        renewAuthorizationInFlight = null
+                    }
+                }
             }
         }
-    }
 }

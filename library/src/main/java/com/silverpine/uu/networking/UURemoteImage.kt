@@ -6,9 +6,6 @@ import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.networking.handlers.UUFileResponseHandler
 import java.io.File
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-
 
 class UURemoteImage(
     val session: UUHttpSession = UUHttpSession(),
@@ -27,41 +24,25 @@ class UURemoteImage(
 
     override suspend fun download(url: String): UUResult<Bitmap>
     {
-        return suspendCoroutine()
-        { continuation ->
-
-            val request = UUHttpRequest(url).apply()
-            {
-                method = UUHttpMethod.GET
-                responseHandler = UUFileResponseHandler(downloadFolder)
-            }
-
-            session.executeRequest(request)
-            { response ->
-
-                response.error?.let()
-                {
-                    continuation.resume(UUResult.failure(it))
-                    return@executeRequest
-                }
-
-                val file = (response.parsedResponse as? File)
-                if (file == null)
-                {
-                    continuation.resume(failure(Error.DownloadFailed))
-                    return@executeRequest
-                }
-
-                val bmp = BitmapFactory.decodeFile(file.absolutePath)
-                if (bmp == null)
-                {
-                    continuation.resume(failure(Error.LoadBitmapFailed))
-                    return@executeRequest
-                }
-
-                continuation.resume(UUResult.success(bmp))
-            }
+        val request = UUHttpRequest(url).apply()
+        {
+            method = UUHttpMethod.GET
+            responseHandler = UUFileResponseHandler(downloadFolder)
         }
+
+        val response = session.executeRequest(request)
+
+        response.error?.let {
+            return UUResult.failure(it)
+        }
+
+        val file = (response.parsedResponse as? File)
+            ?: return failure(Error.DownloadFailed)
+
+        val bmp = BitmapFactory.decodeFile(file.absolutePath)
+            ?: return failure(Error.LoadBitmapFailed)
+
+        return UUResult.success(bmp)
     }
 
     private fun failure(error: Error): UUResult<Bitmap>

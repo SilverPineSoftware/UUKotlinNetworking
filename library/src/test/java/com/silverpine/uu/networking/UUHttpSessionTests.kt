@@ -7,11 +7,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mockStatic
+import kotlinx.coroutines.runBlocking
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import java.net.URL
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
@@ -59,8 +58,7 @@ class UUHttpSessionTests
     {
         @OptIn(ExperimentalAtomicApi::class)
         @Test
-        fun `checkConnection fails with error`()
-        {
+        fun `checkConnection fails with error`() = runBlocking {
             val injectedError = UUError(-5757, "UnitTestErrorDomain")
             val connectivity = mock<UUConnectivityProvider> {
                 on { checkConnection() } doReturn injectedError
@@ -71,20 +69,7 @@ class UUHttpSessionTests
             val req = UUHttpRequest(url = "https://api.example.com/test")
             req.connectivityProvider = connectivity
 
-            var responseContainer = AtomicReference<UUHttpResponse?>(null)
-
-            val latch = CountDownLatch(1)
-
-            session.executeRequest(req)
-            { response ->
-
-                responseContainer.store(response)
-                latch.countDown()
-            }
-
-            latch.await(5, TimeUnit.SECONDS)
-
-            val response = UUAssert.unwrap(responseContainer.load())
+            val response = session.executeRequest(req)
             var err = UUAssert.unwrap(response.error)
             assertEquals(injectedError.code, err.code)
             assertEquals(injectedError.domain, err.domain)
