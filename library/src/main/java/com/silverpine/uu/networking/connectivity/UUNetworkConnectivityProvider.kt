@@ -18,7 +18,7 @@ import com.silverpine.uu.networking.UUHttpErrorCode
  *
  * This provider checks for:
  *  - **Captive portals** (e.g., hotel or public Wi-Fi login pages) and
- *    returns a [UUHttpError] with [UUHttpErrorCode.CaptiveNetworkLoginNeeded].
+ *    returns a [UUHttpError] with [UUHttpErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED].
  *  - **Lack of internet validation** (no route to external network),
  *    returning a [UUHttpError] with [UUHttpErrorCode.NO_INTERNET].
  *
@@ -58,7 +58,7 @@ class UUNetworkConnectivityProvider(val context: Context) : UUConnectivityProvid
 
         if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL))
         {
-            val error = UUHttpError.create(UUHttpErrorCode.CaptiveNetworkLoginNeeded)
+            val error = UUHttpError.create(UUHttpErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED)
             return error
         }
 

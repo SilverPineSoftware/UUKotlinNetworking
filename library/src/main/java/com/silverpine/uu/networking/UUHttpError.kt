@@ -3,8 +3,6 @@ package com.silverpine.uu.networking
 import android.os.Bundle
 import android.os.Parcelable
 import com.silverpine.uu.core.UUError
-import com.silverpine.uu.core.UUJson
-import kotlinx.serialization.Serializable
 import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -37,7 +35,7 @@ object UUHttpError
 
         if (exception is SocketTimeoutException)
         {
-            adjustedCode = UUHttpErrorCode.TIMED_OUT
+            adjustedCode = UUHttpErrorCode.TIMEOUT
         }
         else if (exception is UnknownHostException)
         {

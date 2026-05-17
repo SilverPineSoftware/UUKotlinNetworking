@@ -3,83 +3,118 @@ package com.silverpine.uu.networking
 import android.os.Bundle
 import android.os.Parcelable
 import com.silverpine.uu.core.UUError
+import com.silverpine.uu.networking.UUHttpErrorCode.Companion.DOMAIN
+import com.silverpine.uu.networking.UUHttpErrorCode.Companion.error
+import com.silverpine.uu.networking.UUHttpErrorCode.Companion.fromInt
 
+/**
+ * Typed error codes for [UUHttpSession] and related networking APIs.
+ *
+ * Values are stored on [UUError.code] under [UUHttpError.DOMAIN] (or [DOMAIN] for legacy lookups).
+ * Resolve a stored code with [UUError.uuErrorCode].
+ *
+ * Transport failures are often normalized in [UUHttpError.fromException] (for example
+ * [java.net.SocketTimeoutException] → [TIMEOUT], [java.net.UnknownHostException] → [CANNOT_FIND_HOST]).
+ *
+ * @property value Integer code persisted on [UUError].
+ *
+ * @see UUHttpError
+ * @see UUHttpSession
+ */
 enum class UUHttpErrorCode(val value: Int)
 {
-    // Returned when URLSession returns a non-nil error and the underlying
-    // error domain is NSURLErrorDomain and the underlying error code is
-    // NSURLErrorNotConnectedToInternet
-    NO_INTERNET(1000),
+    /** Request completed without a networking-layer failure. */
+    SUCCESS(0),
 
-    // Returned when URLSession returns a non-nil error and the underlying
-    // error domain is NSURLErrorDomain and the underlying error code is
-    // NSURLErrorCannotFindHost
-    CANNOT_FIND_HOST(1001),
+    /** Connect or read timed out ([java.net.SocketTimeoutException] and similar). */
+    TIMEOUT(1),
 
-    // Returned when URLSession returns a non-nil error and the underlying
-    // error domain is NSURLErrorDomain and the underlying error code is
-    // NSURLErrorTimedOut
-    TIMED_OUT(1002),
+    /** The operation was canceled by the user or caller. */
+    USER_CANCELLED(2),
 
-    // Returned when URLSession completion block returns a non-nil Error, and
-    // that error is not specifically mapped to a more common UUHttpSessionError
-    // In this case, the underlying NSError is wrapped in the user info block
-    // using the NSUnderlyingError key
-    HTTP_FAILURE(1003),
+    /** No validated internet connection (connectivity check before the request is sent). */
+    NO_INTERNET(3),
 
-    // Returned when the URLSession completion block returns with a nil Error
-    // and an HTTP return code that is not 2xx
-    HTTP_ERROR(1004),
-
-    // Returned when a user cancels an operation
-    USER_CANCELLED(1005),
+    /** Host name could not be resolved ([java.net.UnknownHostException]). */
+    CANNOT_FIND_HOST(4),
 
     /**
-     * An exception was caught when attempting to open the URL Connection. Check the exception
-     * property of UUError for additional details.
+     * A low-level HTTP or I/O failure that is not mapped to a more specific code.
+     *
+     * The causing [Exception] is attached on [UUError] when available.
      */
-    OpenConnectionFailure(1006),
-
-    // UU failed to parse a response.  See underlying error for more details
-    PARSE_FAILURE(1007),
+    HTTP_FAILURE(5),
 
     /**
-     * An exception was caught when serializing the request body. Check the exception
-     * property of UUError for additional details.
+     * The server returned a non-success HTTP status, or a socket/SSL failure was classified as an HTTP-layer error.
+     *
+     * HTTP status and parsed body may be present in [UUError] user info; see [UUHttpError.UserInfoKeys].
      */
-    SERIALIZE_FAILURE(1008),
+    HTTP_ERROR(6),
 
     /**
-     * An exception was caught when sending data to a remote endpoint. Check the exception
-     * property of UUError for additional details.
+     * [java.net.HttpURLConnection] could not be opened for the request URL.
+     *
+     * See the [Exception] on [UUError] for details.
      */
-    WRITE_FAILED(1009),
+    OPEN_CONNECTION_FAILURE(7),
+
+    /** Response body could not be parsed; see nested error information on [UUError]. */
+    PARSE_FAILURE(8),
 
     /**
-     * An exception was caught when reading data from a remote endpoint. Check the exception
-     * property of UUError for additional details.
+     * Request body serialization failed before the request was sent.
+     *
+     * See the [Exception] on [UUError] for details.
      */
-    READ_FAILED(1010),
+    SERIALIZE_FAILURE(9),
 
-    // Error code returned when server authorization is needed.  By default this happens on a 401 error, but
-    //applications can emit this error from custom parsers to trigger authorization renewal for other error conditions.
-    AUTHORIZATION_NEEDED(1011),
+    /**
+     * Writing the request body to the connection failed.
+     *
+     * See the [Exception] on [UUError] for details.
+     */
+    WRITE_FAILED(10),
 
-    // Error code returned when an unknown error occurs.  This is typically a developer error. Contact the Api developers.
-    UNHANDLED_EXCEPTION(1012),
+    /**
+     * Reading the response from the connection failed.
+     *
+     * See the [Exception] on [UUError] for details.
+     */
+    READ_FAILED(11),
 
-    // An exception was caught in HandleResponse
-    HandleResponseException(1013),
+    /**
+     * Credentials are missing or rejected; renew authorization and retry.
+     *
+     * Emitted for HTTP 401 by default, or by custom response parsers via [UUHttpError.fromHttpCode].
+     */
+    AUTHORIZATION_NEEDED(12),
 
-    CaptiveNetworkLoginNeeded(1014),
+    /** An unexpected exception was not mapped to a more specific code. */
+    UNHANDLED_EXCEPTION(13),
 
-    // Error code returned when an unknown error occurs.  This is typically a developer error. Contact the Api developers.
-    UNDEFINED(1999);
+    /** [UUHttpSession] failed while handling the response in [UUHttpSession.handleResponse]. */
+    HANDLE_RESPONSE_EXCEPTION(14),
+
+    /** Device is on a captive portal or similar network that requires login before internet access. */
+    CAPTIVE_NETWORK_LOGIN_NEEDED(15),
+
+    /** Unknown or unrecognized code; also used as the result of [fromInt] when no constant matches. */
+    UNDEFINED(-1),
+    ;
 
     companion object
     {
+        /**
+         * Error domain string used by [error] when building a [UUError].
+         *
+         * Prefer [UUHttpError.DOMAIN] for new code paths that integrate with [UUHttpError] helpers.
+         */
         const val DOMAIN = "UUHttpErrorCodeDomain"
 
+        /**
+         * Maps an integer [value] to the matching constant, or [UNDEFINED] if none match.
+         */
         fun fromInt(value: Int): UUHttpErrorCode
         {
             entries.forEach()
@@ -93,10 +128,14 @@ enum class UUHttpErrorCode(val value: Int)
             return UNDEFINED
         }
 
+        /**
+         * Builds a [UUError] with [code], [DOMAIN], optional [ex], and optional [userInfo] in a [Bundle].
+         */
         fun error(
             code: UUHttpErrorCode,
             ex: Exception? = null,
-            userInfo: Parcelable? = null): UUError
+            userInfo: Parcelable? = null,
+        ): UUError
         {
             val info = Bundle()
             info.putParcelable("userInfo", userInfo)

@@ -93,7 +93,7 @@ fun OpenAiScreen(
                         result.onFailure()
                         {
                             val errorCode = UUHttpErrorCode.fromInt(result.errorOrNull()?.code ?: 0)
-                            if (errorCode == UUHttpErrorCode.CaptiveNetworkLoginNeeded)
+                            if (errorCode == UUHttpErrorCode.CAPTIVE_NETWORK_LOGIN_NEEDED)
                             {
                                 // TODO: try to prompt for network login...
                             }

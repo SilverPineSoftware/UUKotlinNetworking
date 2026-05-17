@@ -117,7 +117,7 @@ open class UUHttpSession
             val url = request.toURL
 
             val urlConnection = url.uuOpenConnection(request.proxy) ?: return UUResult.failure(
-                UUHttpError.create(UUHttpErrorCode.OpenConnectionFailure)
+                UUHttpError.create(UUHttpErrorCode.OPEN_CONNECTION_FAILURE)
             )
 
             urlConnection.useCaches = request.useCaches
@@ -152,7 +152,7 @@ open class UUHttpSession
         }
         catch (ex: Exception)
         {
-            val error = UUHttpError.fromException(UUHttpErrorCode.OpenConnectionFailure, ex)
+            val error = UUHttpError.fromException(UUHttpErrorCode.OPEN_CONNECTION_FAILURE, ex)
             result = UUResult.failure(error)
         }
 
@@ -167,7 +167,7 @@ open class UUHttpSession
         }
         catch (ex: Exception)
         {
-            UUHttpResponse(request = request, error = UUHttpError.fromException(UUHttpErrorCode.HandleResponseException, ex))
+            UUHttpResponse(request = request, error = UUHttpError.fromException(UUHttpErrorCode.HANDLE_RESPONSE_EXCEPTION, ex))
         }
     }
 
