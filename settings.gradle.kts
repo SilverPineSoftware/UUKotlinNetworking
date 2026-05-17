@@ -1,39 +1,39 @@
 pluginManagement {
+
+    val configureUuKotlinBuildRepo: MavenArtifactRepository.() -> Unit = {
+        name = "UUKotlinBuildGitHubPackages"
+        url = uri(System.getenv("UU_KOTLIN_BUILD_URL"))
+        credentials {
+            username = providers.gradleProperty("gpr.user").orNull
+                ?: System.getenv("GITHUB_ACTOR")
+            // CI: pass secrets.RELEASE_PAT as env GPR_TOKEN (do not rely on default GITHUB_TOKEN for another repo's Packages).
+            password = providers.gradleProperty("gpr.token").orNull
+                ?: System.getenv("GPR_TOKEN")
+                        ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+
+    settings.extra["uuKotlinBuildConfiguration"] = configureUuKotlinBuildRepo
+
+
     repositories {
         gradlePluginPortal()
         google()
         mavenCentral()
-        maven {
-            name = "UUKotlinBuildGitHubPackages"
-            url = uri("https://maven.pkg.github.com/SilverpineSoftware/UUKotlinBuild")
-            credentials {
-                username = providers.gradleProperty("gpr.user").orNull
-                    ?: System.getenv("GITHUB_ACTOR")
-                // CI: pass secrets.RELEASE_PAT as env GPR_TOKEN (do not rely on default GITHUB_TOKEN for another repo's Packages).
-                password = providers.gradleProperty("gpr.token").orNull
-                    ?: System.getenv("GPR_TOKEN")
-                    ?: System.getenv("GITHUB_TOKEN")
-            }
-        }
+        maven(configureUuKotlinBuildRepo)
     }
 }
 
 dependencyResolutionManagement {
+    @Suppress("UNCHECKED_CAST")
+    val configureUuKotlinBuildRepo = settings.extra["uuKotlinBuildConfiguration"] as MavenArtifactRepository.() -> Unit
+
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
-        maven {
-            name = "UUKotlinBuildGitHubPackages"
-            url = uri("https://maven.pkg.github.com/SilverpineSoftware/UUKotlinBuild")
-            credentials {
-                username = providers.gradleProperty("gpr.user").orNull
-                    ?: System.getenv("GITHUB_ACTOR")
-                password = providers.gradleProperty("gpr.token").orNull
-                    ?: System.getenv("GPR_TOKEN")
-                    ?: System.getenv("GITHUB_TOKEN")
-            }
-        }
+        maven(uri(System.getenv("MAVEN_CENTRAL_SNAPSHOT_URL")))
+        maven(configureUuKotlinBuildRepo)
         mavenLocal()
     }
     versionCatalogs {
