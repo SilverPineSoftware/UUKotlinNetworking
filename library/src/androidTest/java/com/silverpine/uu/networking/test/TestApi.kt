@@ -64,11 +64,11 @@ interface ITestApi
 //    fun postObject(obj: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
 //    fun postArray(array: Array<TestApiObject>, completion: (UUHttpResponse<Array<TestApiObject>, TestApiError>) -> Unit)
 
-    suspend fun getObject(echo: TestApiObject?): UUResult<TestApiObject>
-    suspend fun getArray(count: Int): UUResult<Array<TestApiObject>>
+    suspend fun getObject(echo: TestApiObject?): UUResult<TestApiObject, UUError>
+    suspend fun getArray(count: Int): UUResult<Array<TestApiObject>, UUError>
 
-    suspend fun postObject(obj: TestApiObject): UUResult<TestApiObject>
-    suspend fun postArray(array: Array<TestApiObject>): UUResult<Array<TestApiObject>>
+    suspend fun postObject(obj: TestApiObject): UUResult<TestApiObject, UUError>
+    suspend fun postArray(array: Array<TestApiObject>): UUResult<Array<TestApiObject>, UUError>
 
     /*
     fun postObject(request: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
@@ -108,7 +108,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
         //session.logResponses = true
     }
 
-    override suspend fun getObject(echo: TestApiObject?): UUResult<TestApiObject>
+    override suspend fun getObject(echo: TestApiObject?): UUResult<TestApiObject, UUError>
     {
         val queryArgs: UUQueryStringsArgs = hashMapOf()
 
@@ -149,7 +149,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
         }
     }
 
-    override suspend fun getArray(count: Int): UUResult<Array<TestApiObject>>
+    override suspend fun getArray(count: Int): UUResult<Array<TestApiObject>, UUError>
     {
         val queryArgs: UUQueryStringsArgs = hashMapOf()
         queryArgs["count"] = "$count"
@@ -173,7 +173,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
         }
     }
 
-    override suspend fun postObject(obj: TestApiObject): UUResult<TestApiObject>
+    override suspend fun postObject(obj: TestApiObject): UUResult<TestApiObject, UUError>
     {
         val request = UUTypedHttpRequest(
             url = "$apiUrl/single",
@@ -195,7 +195,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
         }
     }
 
-    override suspend fun postArray(array: Array<TestApiObject>): UUResult<Array<TestApiObject>>
+    override suspend fun postArray(array: Array<TestApiObject>): UUResult<Array<TestApiObject>, UUError>
     {
         val request = UUTypedHttpRequest(
             url = "$apiUrl/single",
