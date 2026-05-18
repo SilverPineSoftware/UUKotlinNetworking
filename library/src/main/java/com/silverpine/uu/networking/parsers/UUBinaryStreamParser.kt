@@ -6,7 +6,7 @@ import java.net.HttpURLConnection
 
 open class UUBinaryStreamParser: UUHttpStreamParser
 {
-    override fun parse(
+    override suspend fun parse(
         stream: InputStream,
         response: HttpURLConnection
     ): Any?

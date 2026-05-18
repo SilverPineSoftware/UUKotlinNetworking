@@ -14,7 +14,7 @@ import com.silverpine.uu.networking.UUHttpSession
 import com.silverpine.uu.networking.UUJsonBody
 import com.silverpine.uu.networking.handlers.UUBaseResponseHandler
 import com.silverpine.uu.networking.handlers.UUTypedResponseHandler
-import com.silverpine.uu.networking.parsers.UUHttpStreamParser
+import com.silverpine.uu.networking.parsers.uuHttpStreamParser
 import com.silverpine.uu.test.instrumented.annotations.UUIntegrationTest
 import com.silverpine.uu.test.uuRandomLetters
 import kotlinx.coroutines.runBlocking
@@ -30,6 +30,8 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
+import java.io.InputStream
+import java.net.HttpURLConnection
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -139,8 +141,7 @@ class UURawHttpTests
 
         request.responseHandler = object: UUBaseResponseHandler()
         {
-            override val successParser: UUHttpStreamParser = UUHttpStreamParser { stream, response ->
-
+            override val successParser = uuHttpStreamParser { stream, _ ->
                 val applicationContext = InstrumentationRegistry.getInstrumentation().targetContext
                 val outputFolder = Paths.get("${applicationContext.noBackupFilesDir}/uu2")
                 stream.uuUnzip(outputFolder)

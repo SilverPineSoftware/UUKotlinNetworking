@@ -48,7 +48,10 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
             UUHttpLogging.logResponse(request, bufferedStream)
 
             val parser = if (isSuccess) successParser else errorParser
-            val parsedResponse = parser.parse(bufferedStream, urlConnection)
+            val parsedResponse = withContext(Dispatchers.IO)
+            {
+                parser.parse(bufferedStream, urlConnection)
+            }
             return finishHandleResponse(request, urlConnection, parsedResponse)
         }
         catch (ex: Exception)

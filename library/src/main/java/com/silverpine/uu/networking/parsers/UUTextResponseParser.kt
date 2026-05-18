@@ -6,7 +6,7 @@ import java.net.HttpURLConnection
 
 class UUTextResponseParser: UUHttpStreamParser
 {
-    override fun parse(stream: InputStream, response: HttpURLConnection): Any?
+    override suspend fun parse(stream: InputStream, response: HttpURLConnection): Any?
     {
         //response.contentType
         //response.contentEncoding

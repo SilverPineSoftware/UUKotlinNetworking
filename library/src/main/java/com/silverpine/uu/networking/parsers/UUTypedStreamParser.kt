@@ -6,7 +6,7 @@ import java.net.HttpURLConnection
 
 open class UUTypedStreamParser<DataType: Any>(private val objectClass: Class<DataType>): UUHttpStreamParser
 {
-    override fun parse(
+    override suspend fun parse(
         stream: InputStream,
         response: HttpURLConnection
     ): Any?
