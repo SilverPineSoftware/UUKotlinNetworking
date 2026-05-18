@@ -27,4 +27,8 @@ fun interface UUHttpStreamParser
 fun uuHttpStreamParser(
     block: suspend (stream: InputStream, response: HttpURLConnection) -> Any?,
 ): UUHttpStreamParser =
-    UUHttpStreamParser { stream, response -> block(stream, response) }
+    object : UUHttpStreamParser
+    {
+        override suspend fun parse(stream: InputStream, response: HttpURLConnection): Any? =
+            block(stream, response)
+    }
