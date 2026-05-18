@@ -6,6 +6,7 @@ plugins {
     alias(uuBuild.plugins.kotlin.serialization)
     alias(uuBuild.plugins.uu.library)
     alias(uuBuild.plugins.uu.android.test)
+    alias(uuBuild.plugins.junit5.robolectric.extension)
 }
 
 dependencies {
@@ -24,8 +25,10 @@ dependencies {
     testImplementation(uuBuild.mockito.core)
     testImplementation(uuBuild.mockito.inline)
     testImplementation(uuBuild.mockito.kotlin)
+    testImplementation(uuBuild.robolectric)
 
     testImplementation(libs.uu.test.ktx)
+
 
     androidTestImplementation(uuBuild.androidx.junit)
     androidTestImplementation(uuBuild.androidx.espresso.core)

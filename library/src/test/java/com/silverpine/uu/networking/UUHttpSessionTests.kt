@@ -18,11 +18,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * JVM unit tests for [UUHttpSession.executeRequest] error paths.
+ * JVM unit tests for [UUHttpSession.executeRequest] using stubbed connection/handler results.
  *
- * Uses plain [UUError] instances (no [android.os.Bundle]) because [UUNetworkError.makeError]
- * requires the Android framework. Mapping logic in [UUNetworkError.fromException] is covered
- * in instrumented tests / production on device.
+ * Paths that require real [UUNetworkError] / [android.os.Bundle] are in [UUHttpSessionRobolectricTests].
  */
 class UUHttpSessionTests
 {
