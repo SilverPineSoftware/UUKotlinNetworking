@@ -32,17 +32,16 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven(uri(System.getenv("MAVEN_CENTRAL_SNAPSHOT_URL")))
         maven(configureUuKotlinBuildRepo)
-        mavenLocal()
     }
+
     versionCatalogs {
-    register("uuBuild") {
-        val uuBuildVersion = providers.gradleProperty("uu_build").orNull
-            ?: error("Set `uu_build=<version>` in gradle.properties.")
-        from("com.silverpine.uu:uu-kotlin-build-catalog:$uuBuildVersion")
+        register("uuBuild") {
+            val uuBuildVersion = providers.gradleProperty("uu_build").orNull
+                ?: error("Set `uu_build=<version>` in gradle.properties.")
+            from("com.silverpine.uu:uu-kotlin-build-catalog:$uuBuildVersion")
+        }
     }
-}
 }
 
 rootProject.name = "UUKotlinNetworking"

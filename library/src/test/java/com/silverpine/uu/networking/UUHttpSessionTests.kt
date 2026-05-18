@@ -1,179 +1,233 @@
 package com.silverpine.uu.networking
 
 import com.silverpine.uu.core.UUError
+import com.silverpine.uu.core.UUResult
 import com.silverpine.uu.networking.connectivity.UUConnectivityProvider
 import com.silverpine.uu.test.UUAssert
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mockStatic
-import kotlinx.coroutines.runBlocking
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
+import java.io.ByteArrayInputStream
+import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.concurrent.atomics.AtomicReference
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
-
+/**
+ * JVM unit tests for [UUHttpSession.executeRequest] error paths.
+ *
+ * Uses plain [UUError] instances (no [android.os.Bundle]) because [UUNetworkError.makeError]
+ * requires the Android framework. Mapping logic in [UUNetworkError.fromException] is covered
+ * in instrumented tests / production on device.
+ */
 class UUHttpSessionTests
 {
-    /*
-    data class Case(
-        val name: String,
-        val thrown: Throwable,
-        val expectedCode: UUHttpErrorCode
-    )
+    private val requestUrl = "https://api.example.com/test"
 
-    companion object {
-        @JvmStatic
-        fun exceptionCases() = listOf(
-            Case(
-                name = "Socket timeout -> TIMEOUT",
-                thrown = SocketTimeoutException("read timed out"),
-                expectedCode = UUHttpErrorCode.TIMEOUT  // <-- adjust if named differently
-            ),
-            Case(
-                name = "Unknown host -> HOST_NOT_FOUND",
-                thrown = UnknownHostException("no such host"),
-                expectedCode = UUHttpErrorCode.HOST_NOT_FOUND // <-- adjust name if needed
-            ),
-            Case(
-                name = "Connect refused -> CONNECTION_FAILED",
-                thrown = ConnectException("Connection refused"),
-                expectedCode = UUHttpErrorCode.CONNECTION_FAILED // <-- adjust if needed
-            )
-        )
-    }*/
+    private fun networkError(code: UUNetworkErrorCode): UUError =
+        UUError(code.value, UUNetworkError.DOMAIN)
+
+    private fun onlineRequest(
+        url: String = requestUrl,
+        configure: UUHttpRequest.() -> Unit = {},
+    ): UUHttpRequest =
+        UUHttpRequest(url = url).apply {
+            connectivityProvider = mock {
+                on { checkConnection() } doReturn null
+            }
+            configure()
+        }
+
+    private fun assertFailedAt(
+        response: UUHttpResponse,
+        expectedCode: UUNetworkErrorCode,
+        expectedState: UUHttpRequest.State,
+    )
+    {
+        val error = UUAssert.unwrap(response.error)
+        assertEquals(expectedCode, error.uuNetworkErrorCode())
+        assertEquals(expectedState, response.request.state)
+        assertNull(response.parsedResponse)
+    }
+
+    private fun mockConnection(configure: HttpURLConnection.() -> Unit = {}): HttpURLConnection
+    {
+        val connection = mock<HttpURLConnection>()
+        whenever(connection.responseCode).doReturn(200)
+        whenever(connection.contentType).doReturn("application/json")
+        whenever(connection.contentEncoding).doReturn("")
+        whenever(connection.headerFields).doReturn(emptyMap())
+        whenever(connection.inputStream).doReturn(ByteArrayInputStream("{}".toByteArray()))
+        whenever(connection.url).doReturn(URL(requestUrl))
+        whenever(connection.requestMethod).doReturn("GET")
+        connection.configure()
+        return connection
+    }
 
     /**
-     * Negative-path tests for UUHttpSession when the underlying transport throws.
-     *
-     * Assumptions:
-     * - UUHttpSession calls a transport to execute the request (suspending or blocking).
-     * - Transport exceptions are mapped to UUHttpError with a UUHttpErrorCode.
-     * - Connectivity check passes (we’re testing transport-layer failures here).
+     * Supplies [openConnection] / [handleResponse] results for [executeRequest] tests.
      */
-    @Nested
-    inner class NegativeTests
+    private inner open class StubHttpSession(
+        private val openConnectionResult: UUResult<HttpURLConnection, UUError>? = null,
+        private val handleResponseResult: UUHttpResponse? = null,
+    ) : UUHttpSession()
     {
-        @OptIn(ExperimentalAtomicApi::class)
+        override suspend fun openConnection(request: UUHttpRequest): UUResult<HttpURLConnection, UUError>
+        {
+            return openConnectionResult
+                ?: UUResult.failure(networkError(UUNetworkErrorCode.OPEN_CONNECTION_FAILURE))
+        }
+
+        override suspend fun handleResponse(
+            request: UUHttpRequest,
+            urlConnection: HttpURLConnection,
+        ): UUHttpResponse
+        {
+            return handleResponseResult
+                ?: UUHttpResponse(request = request, parsedResponse = "ok")
+        }
+    }
+
+    @Nested
+    inner class CheckConnectionErrors
+    {
         @Test
-        fun `checkConnection fails with error`() = runBlocking {
+        fun returnsConnectivityErrorWithoutOpeningConnection() = runBlocking {
             val injectedError = UUError(-5757, "UnitTestErrorDomain")
             val connectivity = mock<UUConnectivityProvider> {
                 on { checkConnection() } doReturn injectedError
             }
 
             val session = UUHttpSession()
+            val request = UUHttpRequest(url = requestUrl).apply {
+                connectivityProvider = connectivity
+            }
 
-            val req = UUHttpRequest(url = "https://api.example.com/test")
-            req.connectivityProvider = connectivity
+            val response = session.executeRequest(request)
 
-            val response = session.executeRequest(req)
-            var err = UUAssert.unwrap(response.error)
-            assertEquals(injectedError.code, err.code)
-            assertEquals(injectedError.domain, err.domain)
+            val error = UUAssert.unwrap(response.error)
+            assertEquals(injectedError.code, error.code)
+            assertEquals(injectedError.domain, error.domain)
             assertEquals(UUHttpRequest.State.CheckConnection, response.request.state)
         }
 
-        /*
-        @OptIn(ExperimentalAtomicApi::class)
         @Test
-        fun `openConnection fails with error`()
-        {
-            val injectedError = UUError(-5757, "UnitTestErrorDomain")
-            val session = UUHttpSession()
-
-            val req = UUHttpRequest(url = "https://api.example.com/test")
-
-            var responseContainer = AtomicReference<UUHttpResponse?>(null)
-
-            val latch = CountDownLatch(1)
-
-            val url = req.toURL
-
-            mockStatic(URL::class.java).use { mocked ->
-                mocked.`when`<Any?> { url.openConnection() }
-                    .thenThrow(RuntimeException("Mocked connection failure"))
-
-                //assertThrows<RuntimeException> {
-                  //  url.uuOpenConnection()
-                //}
+        fun skipsCheckWhenConnectivityProviderIsNull() = runBlocking {
+            val connection = mockConnection()
+            val session = StubHttpSession(UUResult.success(connection))
+            val request = onlineRequest {
+                connectivityProvider = null
             }
 
-            session.executeRequest(req)
-            { response ->
+            val response = session.executeRequest(request)
 
-                responseContainer.store(response)
-                latch.countDown()
-            }
+            assertNotNull(response)
+            assertEquals(UUHttpRequest.State.Complete, response.request.state)
+        }
+    }
 
-            latch.await(5, TimeUnit.SECONDS)
-
-            val response = UUAssert.unwrap(responseContainer.load())
-            var err = UUAssert.unwrap(response.error)
-            assertEquals(injectedError.code, err.code)
-            assertEquals(injectedError.domain, err.domain)
-            assertEquals(UUHttpRequest.State.OpenConnection, response.request.state)
-        }*/
-
-        /*
-        @ParameterizedTest(name = "{index}: {0}")
-        @MethodSource("exceptionCases")
-        fun `maps transport exceptions to UUHttpError`(case: Case) = runBlocking {
-            // Arrange
-            val connectivity = mock<UUConnectivityProvider> {
-                on { checkConnection() } doReturn null // connectivity OK; we're testing transport failures
-            }
-
-            // Mock transport to throw the case exception when invoked
-            val transport = mock<UUHttpTransport> {
-                onBlocking { execute(any()) } doAnswer { throw case.thrown }
-            }
-
-            val session = UUHttpSession(
-                connectivityProvider = connectivity,
-                transport = transport
+    @Nested
+    inner class OpenConnectionErrors
+    {
+        @Test
+        fun returnsErrorWhenOpenConnectionFails() = runBlocking {
+            val session = StubHttpSession(
+                UUResult.failure(networkError(UUNetworkErrorCode.OPEN_CONNECTION_FAILURE)),
             )
+            val response = session.executeRequest(onlineRequest())
 
-            val req = UUHttpRequest(url = "https://api.example.com/test")
-
-            // Act
-            val resp = session.execute(req)
-
-            // Assert
-            val err = resp.httpError
-            assertNotNull(err, "Expected an error on response")
-            assertEquals(case.expectedCode, err.code, "Unexpected UUHttpErrorCode")
-            assertNull(resp.httpResponse, "Should not have an HTTP response on transport exception")
-            assertTrue(resp.rawResponse == null || resp.rawResponse?.isEmpty() == true, "No raw body expected")
-
-            // Transport should have been called once
-            verify(transport, times(1)).execute(any())
-            verifyNoMoreInteractions(transport)
+            assertFailedAt(
+                response,
+                UUNetworkErrorCode.OPEN_CONNECTION_FAILURE,
+                UUHttpRequest.State.OpenConnection,
+            )
         }
 
         @Test
-        @DisplayName("Transport throws unknown exception -> maps to UNKNOWN / GENERIC_NETWORK_ERROR")
-        fun mapsUnknownExceptionToGeneric() = runBlocking {
-            val connectivity = mock<UUConnectivityProvider> {
-                on { checkConnection() } doReturn null
-            }
-            val transport = mock<UUHttpTransport> {
-                onBlocking { execute(any()) } doAnswer { throw IllegalStateException("boom") }
-            }
+        fun propagatesTimeoutFromOpenConnection() = runBlocking {
+            val session = StubHttpSession(
+                UUResult.failure(networkError(UUNetworkErrorCode.TIMEOUT)),
+            )
+            val response = session.executeRequest(onlineRequest())
 
-            val session = UUHttpSession(connectivity, transport)
-            val req = UUHttpRequest(url = "https://api.example.com/test")
-
-            val resp = session.execute(req)
-
-            val err = resp.httpError
-            assertNotNull(err, "Expected an error on response")
-            // Pick whichever generic code you use in your lib:
-            // UNKNOWN, GENERIC_NETWORK_ERROR, UNEXPECTED_EXCEPTION, etc.
-            assertEquals(UUHttpErrorCode.UNKNOWN, err.code, "Unexpected UUHttpErrorCode for unknown exception")
-        }*/
+            assertFailedAt(response, UUNetworkErrorCode.TIMEOUT, UUHttpRequest.State.OpenConnection)
+        }
     }
 
+    @Nested
+    inner class PrepareToSendErrors
+    {
+        @Test
+        fun returnsSerializeFailureWhenPrepareToSendFails() = runBlocking {
+            val session = StubHttpSession(UUResult.success(mockConnection()))
+            val request = onlineRequest {
+                method = UUHttpMethod.POST
+                body = object : UUHttpBody("application/json")
+                {
+                    override fun prepareToSend(): UUResult<Pair<ByteArray, UUHttpHeaders>?, UUError> =
+                        UUResult.failure(networkError(UUNetworkErrorCode.SERIALIZE_FAILURE))
+                }
+            }
+
+            val response = session.executeRequest(request)
+
+            assertFailedAt(
+                response,
+                UUNetworkErrorCode.SERIALIZE_FAILURE,
+                UUHttpRequest.State.PrepareToSend,
+            )
+        }
+    }
+
+    @Nested
+    inner class HandleResponseErrors
+    {
+        @Test
+        fun returnsErrorReturnedFromHandleResponse() = runBlocking {
+            val connection = mockConnection()
+            val request = onlineRequest()
+            val session = object : StubHttpSession(UUResult.success(connection))
+            {
+                override suspend fun handleResponse(
+                    request: UUHttpRequest,
+                    urlConnection: HttpURLConnection,
+                ): UUHttpResponse
+                {
+                    return UUHttpResponse(
+                        request = request,
+                        error = networkError(UUNetworkErrorCode.HANDLE_RESPONSE_EXCEPTION),
+                    )
+                }
+            }
+
+            val response = session.executeRequest(request)
+
+            assertFailedAt(
+                response,
+                UUNetworkErrorCode.HANDLE_RESPONSE_EXCEPTION,
+                UUHttpRequest.State.Complete,
+            )
+        }
+    }
+
+    @Nested
+    inner class SuccessfulCompletion
+    {
+        @Test
+        fun completesWhenHandleResponseSucceeds() = runBlocking {
+            val connection = mockConnection()
+            val session = StubHttpSession(UUResult.success(connection))
+            val request = onlineRequest()
+
+            val response = session.executeRequest(request)
+
+            assertNull(response.error)
+            assertEquals("ok", response.parsedResponse)
+            assertEquals(UUHttpRequest.State.Complete, response.request.state)
+        }
+    }
 }
