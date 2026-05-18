@@ -1,5 +1,7 @@
 pluginManagement {
 
+    // This has to live in the pluginManagement block because it's a special
+    // block that gets evaluated before all other parts of the script
     val configureUuKotlinBuildRepo: MavenArtifactRepository.() -> Unit = {
         name = "UUKotlinBuildGitHubPackages"
         url = uri(System.getenv("UU_KOTLIN_BUILD_URL"))
@@ -9,18 +11,21 @@ pluginManagement {
             // CI: pass secrets.RELEASE_PAT as env GPR_TOKEN (do not rely on default GITHUB_TOKEN for another repo's Packages).
             password = providers.gradleProperty("gpr.token").orNull
                 ?: System.getenv("GPR_TOKEN")
-                        ?: System.getenv("GITHUB_TOKEN")
+                ?: System.getenv("GITHUB_TOKEN")
         }
     }
 
+    // Store the closure for use in the dependencyResolutionManagement block below
     settings.extra["uuKotlinBuildConfiguration"] = configureUuKotlinBuildRepo
 
-
     repositories {
+        mavenLocal()
         gradlePluginPortal()
         google()
         mavenCentral()
         maven(configureUuKotlinBuildRepo)
+
+
     }
 }
 
@@ -30,6 +35,7 @@ dependencyResolutionManagement {
 
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
         maven(configureUuKotlinBuildRepo)
