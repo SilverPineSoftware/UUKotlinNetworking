@@ -15,6 +15,22 @@ import java.net.HttpURLConnection
 import java.util.zip.GZIPInputStream
 import java.util.zip.InflaterInputStream
 
+/**
+ * Default [UUHttpResponseHandler] that reads the connection body and parses it with [UUHttpStreamParser].
+ *
+ * Behavior:
+ * - Selects [inputStream][HttpURLConnection.getInputStream] for 2xx responses and
+ *   [errorStream][HttpURLConnection.getErrorStream] otherwise.
+ * - Wraps the stream for `gzip` and `deflate` [content encodings][HttpURLConnection.getContentEncoding].
+ * - Invokes [successParser] or [errorParser] on [Dispatchers.IO].
+ * - Maps non-success HTTP status codes to [UUNetworkError] when the parser did not already return a [UUError].
+ * - Catches unexpected exceptions and returns [UUNetworkErrorCode.READ_FAILED].
+ *
+ * Default parsers are [UUBinaryStreamParser] for both success and error bodies.
+ *
+ * @see UUTypedResponseHandler
+ * @see UUFileResponseHandler
+ */
 open class UUBaseResponseHandler : UUHttpResponseHandler
 {
     override suspend fun handleResponse(request: UUHttpRequest, urlConnection: HttpURLConnection): UUHttpResponse
@@ -58,7 +74,7 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
         {
             return UUHttpResponse(
                 request = request,
-                error = UUNetworkError.fromException(UUNetworkErrorCode.READ_FAILED, ex, request)
+                error = UUNetworkError.fromException(UUNetworkErrorCode.READ_FAILED, ex, request),
             )
         }
     }
@@ -66,7 +82,8 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
     private fun finishHandleResponse(
         request: UUHttpRequest,
         response: HttpURLConnection,
-        result: Any?): UUHttpResponse
+        result: Any?,
+    ): UUHttpResponse
     {
         var err: UUError? = null
         var parsedResponse: Any? = result
@@ -91,13 +108,15 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
             request = request,
             response = response,
             error = err,
-            parsedResponse = parsedResponse
+            parsedResponse = parsedResponse,
         )
 
         return uuResponse
     }
 
+    /** @see UUHttpResponseHandler.successParser */
     override val successParser: UUHttpStreamParser = UUBinaryStreamParser()
 
+    /** @see UUHttpResponseHandler.errorParser */
     override val errorParser: UUHttpStreamParser = UUBinaryStreamParser()
 }
