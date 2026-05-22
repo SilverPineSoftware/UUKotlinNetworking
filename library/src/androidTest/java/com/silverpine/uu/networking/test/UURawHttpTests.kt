@@ -134,7 +134,7 @@ class UURawHttpTests
     @Test
     fun test_0003_download_zip() = runBlocking()
     {
-        val uri = "${TestConfig.BASE_URL}/downloads/zip_100.zip"
+        val uri = "${TestConfig.BASE_URL}/download.php?uu_file=zip_50_100.zip"
 
         val request = UUHttpRequest(uri)
         request.method = UUHttpMethod.GET
