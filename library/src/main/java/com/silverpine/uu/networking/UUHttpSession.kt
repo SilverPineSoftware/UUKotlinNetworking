@@ -12,7 +12,7 @@ open class UUHttpSession
     {
     }
 
-    suspend fun executeRequest(request: UUHttpRequest): UUHttpResponse
+    suspend fun execute(request: UUHttpRequest): UUHttpResponse
     {
         var urlConnection: HttpURLConnection? = null
 

@@ -21,7 +21,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * [UUHttpSession.executeRequest] paths that require [UUNetworkError.makeError] / [UUNetworkError.fromException]
+ * [UUHttpSession.execute] paths that require [UUNetworkError.makeError] / [UUNetworkError.fromException]
  * (Android [android.os.Bundle]).
  */
 @ExtendWith(RobolectricExtension::class)
@@ -86,7 +86,7 @@ class UUHttpSessionRobolectricTests
             }
         }
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
 
         assertFailedAt(
             response,
@@ -103,7 +103,7 @@ class UUHttpSessionRobolectricTests
         val session = StubHttpSession(UUResult.success(connection))
         val request = onlineRequest()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
 
         assertFailedAt(
             response,
@@ -124,7 +124,7 @@ class UUHttpSessionRobolectricTests
             body = UUHttpBody("text/plain", "payload".toByteArray())
         }
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
 
         assertFailedAt(
             response,
@@ -151,7 +151,7 @@ class UUHttpSessionRobolectricTests
             responseHandler = failingHandler
         }
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
 
         assertFailedAt(
             response,

@@ -111,7 +111,7 @@ class UUHttpSessionTests
         val request = UUHttpRequest(uri)
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -136,7 +136,7 @@ class UUHttpSessionTests
 
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -164,7 +164,7 @@ class UUHttpSessionTests
 
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -180,7 +180,7 @@ class UUHttpSessionTests
         request.loggingMode = UUHttpLoggingMode.Verbose
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -199,7 +199,7 @@ class UUHttpSessionTests
 
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -218,7 +218,7 @@ class UUHttpSessionTests
 
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         Assert.assertNull(response.error)
 
         val success = UUAssert.unwrap(response.parsedResponse)
@@ -236,7 +236,7 @@ class UUHttpSessionTests
         request.loggingMode = UUHttpLoggingMode.Verbose
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         Assert.assertNotNull(response.error)
         assertEquals(400, response.httpStatusCode)
 

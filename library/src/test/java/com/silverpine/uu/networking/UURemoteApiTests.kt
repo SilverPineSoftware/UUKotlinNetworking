@@ -100,7 +100,7 @@ class UURemoteApiTests
     ): UUHttpSession
     {
         val session = mock<UUHttpSession>()
-        whenever(session.executeRequest(any())).thenAnswer { invocation ->
+        whenever(session.execute(any())).thenAnswer { invocation ->
             val request = invocation.getArgument<UUHttpRequest>(0)
             runBlocking { handler(request) }
         }

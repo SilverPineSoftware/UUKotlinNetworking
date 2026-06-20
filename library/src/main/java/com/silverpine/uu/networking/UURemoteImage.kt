@@ -30,7 +30,7 @@ class UURemoteImage(
             responseHandler = UUFileResponseHandler(downloadFolder)
         }
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
 
         response.error?.let {
             return UUResult.failure(it)

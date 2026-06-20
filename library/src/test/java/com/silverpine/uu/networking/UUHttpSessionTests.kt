@@ -18,7 +18,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * JVM unit tests for [UUHttpSession.executeRequest] using stubbed connection/handler results.
+ * JVM unit tests for [UUHttpSession.execute] using stubbed connection/handler results.
  *
  * Paths that require real [UUNetworkError] / [android.os.Bundle] are in [UUHttpSessionRobolectricTests].
  */
@@ -67,7 +67,7 @@ class UUHttpSessionTests
     }
 
     /**
-     * Supplies [openConnection] / [handleResponse] results for [executeRequest] tests.
+     * Supplies [openConnection] / [handleResponse] results for [execute] tests.
      */
     private inner open class StubHttpSession(
         private val openConnectionResult: UUResult<HttpURLConnection, UUError>? = null,
@@ -105,7 +105,7 @@ class UUHttpSessionTests
                 connectivityProvider = connectivity
             }
 
-            val response = session.executeRequest(request)
+            val response = session.execute(request)
 
             val error = UUAssert.unwrap(response.error)
             assertEquals(injectedError.code, error.code)
@@ -121,7 +121,7 @@ class UUHttpSessionTests
                 connectivityProvider = null
             }
 
-            val response = session.executeRequest(request)
+            val response = session.execute(request)
 
             assertNotNull(response)
             assertEquals(UUHttpRequest.State.Complete, response.request.state)
@@ -136,7 +136,7 @@ class UUHttpSessionTests
             val session = StubHttpSession(
                 UUResult.failure(networkError(UUNetworkErrorCode.OPEN_CONNECTION_FAILURE)),
             )
-            val response = session.executeRequest(onlineRequest())
+            val response = session.execute(onlineRequest())
 
             assertFailedAt(
                 response,
@@ -150,7 +150,7 @@ class UUHttpSessionTests
             val session = StubHttpSession(
                 UUResult.failure(networkError(UUNetworkErrorCode.TIMEOUT)),
             )
-            val response = session.executeRequest(onlineRequest())
+            val response = session.execute(onlineRequest())
 
             assertFailedAt(response, UUNetworkErrorCode.TIMEOUT, UUHttpRequest.State.OpenConnection)
         }
@@ -171,7 +171,7 @@ class UUHttpSessionTests
                 }
             }
 
-            val response = session.executeRequest(request)
+            val response = session.execute(request)
 
             assertFailedAt(
                 response,
@@ -202,7 +202,7 @@ class UUHttpSessionTests
                 }
             }
 
-            val response = session.executeRequest(request)
+            val response = session.execute(request)
 
             assertFailedAt(
                 response,
@@ -221,7 +221,7 @@ class UUHttpSessionTests
             val session = StubHttpSession(UUResult.success(connection))
             val request = onlineRequest()
 
-            val response = session.executeRequest(request)
+            val response = session.execute(request)
 
             assertNull(response.error)
             assertEquals("ok", response.parsedResponse)

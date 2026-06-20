@@ -30,8 +30,6 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import java.io.InputStream
-import java.net.HttpURLConnection
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -76,7 +74,7 @@ class UURawHttpTests
         val request = UUHttpRequest(uri)
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         assertNotNull(response)
         assertNull(response.error)
     }
@@ -97,7 +95,7 @@ class UURawHttpTests
 
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         assertNotNull(response)
         assertNull(response.error)
         assertNotNull(response.parsedResponse)
@@ -124,7 +122,7 @@ class UURawHttpTests
 
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         assertNotNull(response)
         assertNull(response.error)
         assertNotNull(response.parsedResponse)
@@ -151,7 +149,7 @@ class UURawHttpTests
 
         val session = UUHttpSession()
 
-        val response = session.executeRequest(request)
+        val response = session.execute(request)
         assertNotNull(response)
         assertNull(response.error)
         assertNotNull(response.parsedResponse)
