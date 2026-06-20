@@ -39,7 +39,7 @@ class OpenAiApi: UURemoteApi()
         val request = buildRequest()
         request.body = UUJsonBody(body)
 
-        executeAuthorizedRequest(request)
+        execute(request)
         { response ->
 
             response.error?.let()

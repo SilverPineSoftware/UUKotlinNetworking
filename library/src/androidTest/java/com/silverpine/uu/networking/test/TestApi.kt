@@ -136,7 +136,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
             successClass = TestApiObject::class.java,
             errorClass = TestApiError::class.java)
 
-        val response = executeRequest(request)
+        val response = executeWithoutAuthorizationRenewal(request)
 
         val result = response.parsedResponse as? TestApiObject
         return if (result != null)
@@ -159,7 +159,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
             successClass = Array<TestApiObject>::class.java,
             errorClass = TestApiError::class.java)
 
-        val response = executeRequest(request)
+        val response = executeWithoutAuthorizationRenewal(request)
 
         @Suppress("UNCHECKED_CAST")
         val result = (response.parsedResponse as? Array<*>) as? Array<TestApiObject>
@@ -182,7 +182,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(obj)
 
-        val response = executeRequest(request)
+        val response = executeWithoutAuthorizationRenewal(request)
 
         val result = response.parsedResponse as? TestApiObject
         return if (result != null)
@@ -204,7 +204,7 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
         request.method = UUHttpMethod.POST
         request.body = UUJsonBody(array)
 
-        val response = executeRequest(request)
+        val response = executeWithoutAuthorizationRenewal(request)
 
         @Suppress("UNCHECKED_CAST")
         val result = (response.parsedResponse as? Array<*>) as? Array<TestApiObject>

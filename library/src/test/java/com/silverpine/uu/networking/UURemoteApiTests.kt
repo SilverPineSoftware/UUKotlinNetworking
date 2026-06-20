@@ -120,7 +120,7 @@ class UURemoteApiTests
             }
             val api = TestRemoteApi(session)
 
-            val response = api.executeAuthorizedRequest(request)
+            val response = api.execute(request)
 
             assertEquals("ok", response.parsedResponse)
             assertEquals(0, api.renewCallCount.get())
@@ -141,7 +141,7 @@ class UURemoteApiTests
                 renewResult = UURenewAuthorizationResponse(didAttempt = false, renewalError)
             }
 
-            val response = api.executeAuthorizedRequest(request)
+            val response = api.execute(request)
 
             assertSame(renewalError, response.error)
             assertEquals(1, api.renewCallCount.get())
@@ -163,7 +163,7 @@ class UURemoteApiTests
 
             coroutineScope {
                 val responses = List(8) {
-                    async { api.executeAuthorizedRequest(request) }
+                    async { api.execute(request) }
                 }.awaitAll()
 
                 responses.forEach { assertEquals("ok", it.parsedResponse) }
@@ -193,7 +193,7 @@ class UURemoteApiTests
             }
             val api = TestRemoteApi(session)
 
-            val response = api.executeAuthorizedRequest(request)
+            val response = api.execute(request)
 
             assertEquals("after-renew", response.parsedResponse)
             assertNull(response.error)
@@ -214,7 +214,7 @@ class UURemoteApiTests
                 renewResult = UURenewAuthorizationResponse(didAttempt = true, renewalError)
             }
 
-            val response = api.executeAuthorizedRequest(request)
+            val response = api.execute(request)
 
             assertSame(renewalError, response.error)
             assertEquals(1, api.renewCallCount.get())
@@ -233,7 +233,7 @@ class UURemoteApiTests
                 renewResult = UURenewAuthorizationResponse(didAttempt = false, error = null)
             }
 
-            val response = api.executeAuthorizedRequest(request)
+            val response = api.execute(request)
 
             assertNotNull(response.error)
             assertEquals(UUNetworkErrorCode.AUTHORIZATION_NEEDED, response.error?.uuNetworkErrorCode())
@@ -250,7 +250,7 @@ class UURemoteApiTests
             }
 
             coroutineScope {
-                List(6) { async { api.executeAuthorizedRequest(request) } }.awaitAll()
+                List(6) { async { api.execute(request) } }.awaitAll()
             }
 
             assertEquals(1, api.renewCallCount.get())
@@ -268,11 +268,11 @@ class UURemoteApiTests
                 apiAuthorizationNeeded = true
             }
 
-            api.executeAuthorizedRequest(request)
+            api.execute(request)
             assertEquals(1, api.renewCallCount.get())
 
             api.resetRenewalGate()
-            api.executeAuthorizedRequest(request)
+            api.execute(request)
             assertEquals(2, api.renewCallCount.get())
         }
 
@@ -285,10 +285,10 @@ class UURemoteApiTests
                 blockRenewalUntilReleased = true
             }
 
-            val first = async(Dispatchers.Default) { api.executeAuthorizedRequest(request) }
+            val first = async(Dispatchers.Default) { api.execute(request) }
             yield()
             api.awaitRenewStarted()
-            val second = async(Dispatchers.Default) { api.executeAuthorizedRequest(request) }
+            val second = async(Dispatchers.Default) { api.execute(request) }
 
             api.releaseBlockedRenewal()
             first.await()

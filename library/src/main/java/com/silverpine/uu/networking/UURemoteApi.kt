@@ -18,7 +18,7 @@ open class UURemoteApi(
     private val renewAuthorizationMutex = Mutex()
     private var renewAuthorizationInFlight: Deferred<UURenewAuthorizationResponse>? = null
 
-    suspend fun executeAuthorizedRequest(request: UUHttpRequest): UUHttpResponse
+    open suspend fun execute(request: UUHttpRequest): UUHttpResponse
     {
         // 1) Renew authorization if needed
         val renewal = renewApiAuthorizationIfNeeded()
@@ -29,7 +29,7 @@ open class UURemoteApi(
         }
 
         // 3) Execute the request
-        var response = executeOneAuthorizedRequest(request)
+        var response = executeWithoutAuthorizationRenewal(request)
 
         // 4) If an error is returned and that error indicates an authorization
         // renewal is warranted, then attempt authorization renewal again.
@@ -47,79 +47,28 @@ open class UURemoteApi(
             // 7) If authorization renewal was attempted, then retry the request
             if (retryRenewal.didAttempt)
             {
-                response = executeOneAuthorizedRequest(request)
+                response = executeWithoutAuthorizationRenewal(request)
             }
         }
 
         return response
     }
 
-    /*fun executeAuthorizedRequest(
-        request: UUHttpRequest,
-        completion: UUObjectBlock<UUHttpResponse>,
-    )
-    {
-        uuDispatch {
-            val response = try
-            {
-                runBlocking { executeAuthorizedRequest(request) }
-            }
-            catch (ex: Exception)
-            {
-                UUHttpResponse(
-                    request = request,
-                    error = UUHttpError.fromException(UUHttpErrorCode.UNDEFINED, ex),
-                )
-            }
-            uuDispatchMain { completion(response) }
-        }
-    }*/
-
-    suspend fun executeOneAuthorizedRequest(
-        request: UUHttpRequest,
-    ): UUHttpResponse
+    open suspend fun prepareRequest(request: UUHttpRequest)
     {
         if (request.authorizationProvider == null)
         {
             request.authorizationProvider = defaultAuthorizationProvider
         }
-
-        return executeRequest(request)
     }
 
-    /**
-     * Executes a single request with no authorization added
-     *
-     * @param request the request
-     * @return the response
-     */
-    suspend fun executeRequest(request: UUHttpRequest): UUHttpResponse
+    open suspend fun executeWithoutAuthorizationRenewal(
+        request: UUHttpRequest,
+    ): UUHttpResponse
     {
+        prepareRequest(request)
         return session.execute(request)
     }
-
-    /*fun executeRequest(
-        request: UUHttpRequest,
-        completion: UUObjectBlock<UUHttpResponse>,
-    )
-    {
-        uuDispatch {
-            val response = try
-            {
-                runBlocking { executeRequest(request) }
-            }
-            catch (ex: Exception)
-            {
-                UUHttpResponse(
-                    request = request,
-                    error = UUHttpError.fromException(UUHttpErrorCode.UNDEFINED, ex),
-                )
-            }
-            uuDispatchMain { completion(response) }
-        }
-    }*/
-
-    // MARK: Public Overridable Methods
 
     /**
      * Perform an api authorization/renewal. Typically, this means fetching a JWT from a server.

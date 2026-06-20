@@ -61,7 +61,7 @@ class ShutterstockApi : UURemoteApi()
             loggingMode = UUHttpLoggingMode.Verbose
         }
 
-        executeAuthorizedRequest(request) { response ->
+        execute(request) { response ->
             val parsed = response.parsedResponse as? ShutterstockSearchResponse
             if (parsed != null) {
                 completion(UUResult.success(parsed))
