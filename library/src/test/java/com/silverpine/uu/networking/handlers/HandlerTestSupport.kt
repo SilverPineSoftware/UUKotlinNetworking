@@ -27,6 +27,7 @@ internal object HandlerTestSupport
         whenever(connection.responseCode).thenReturn(statusCode)
         whenever(connection.url).thenReturn(URL(url))
         whenever(connection.contentType).thenReturn(contentType)
+        whenever(connection.contentLength).thenReturn(body.size)
         whenever(connection.contentEncoding).thenReturn(contentEncoding)
         whenever(connection.headerFields).thenReturn(emptyMap())
 
