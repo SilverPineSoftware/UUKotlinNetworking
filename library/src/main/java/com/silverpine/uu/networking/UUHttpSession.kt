@@ -55,6 +55,7 @@ open class UUHttpSession
             preparedBody?.first?.let()
             {
                 changeState(request, UUHttpRequest.State.WriteRequest)
+                UUHttpLogging.logRequest(request, it)
                 urlConnection.uuWriteBody(it).getOrThrow()
             }
 

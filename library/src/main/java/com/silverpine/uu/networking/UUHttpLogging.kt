@@ -4,6 +4,7 @@ import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.uuSubData
 import com.silverpine.uu.logging.UULog
 import java.io.BufferedInputStream
+import kotlin.math.min
 
 private const val LOG_TAG = "UUHttp"
 
@@ -17,7 +18,8 @@ object UUHttpLogging
     {
         if (request.loggingMode.contains(mode))
         {
-            UULog.debug(LOG_TAG, "UUHttpLogging [${request.id}] [${mode.name}]- $message, $throwable")
+            val throwablePart = throwable?.let { ", $it" } ?: ""
+            UULog.debug(LOG_TAG, "UUHttpLogging [${request.id}] [${mode.name}]- ${message}${throwablePart}")
         }
     }
 
@@ -40,6 +42,17 @@ object UUHttpLogging
         error: UUError)
     {
         log(UUHttpLoggingMode.Errors, request, "state=${request.state} error=$error", null)
+    }
+
+    fun logRequest(request: UUHttpRequest, bytes: ByteArray)
+    {
+        if (request.loggingMode.contains(UUHttpLoggingMode.RequestBody))
+        {
+            val peekSize = 10_000 // or make this configurable
+            val string = bytes.uuSubData(0, min(bytes.size, peekSize))?.toString(Charsets.UTF_8)
+
+            log(UUHttpLoggingMode.RequestBody, request, string ?: "")
+        }
     }
 
     fun logResponse(request: UUHttpRequest, responseStream: BufferedInputStream)
