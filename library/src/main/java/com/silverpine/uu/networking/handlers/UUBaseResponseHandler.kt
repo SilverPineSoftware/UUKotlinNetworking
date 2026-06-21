@@ -48,6 +48,18 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
                 urlConnection.errorStream
             }
 
+            // Guard against an empty input stream
+            if (readStream == null)
+            {
+                return finishHandleResponse(request, urlConnection, null)
+            }
+
+            // If response headers indicate no content, return early
+            if (urlConnection.contentLength == 0)
+            {
+                return finishHandleResponse(request, urlConnection, null)
+            }
+
             when (urlConnection.contentEncoding?.lowercase())
             {
                 "gzip" -> readStream =

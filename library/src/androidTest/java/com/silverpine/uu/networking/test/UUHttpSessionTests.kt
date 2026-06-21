@@ -245,4 +245,23 @@ class UUHttpSessionTests
         val bytes = UUAssert.unwrap(success as? ByteArray)
         UULog.debug(LOG_TAG, "test_0005_get_with_error, Error: ${bytes.uuUtf8().getOrNull()}")
     }
+
+    @Test
+    fun test_0006_get_with_nullable_response_no_data() = runBlocking()
+    {
+        val uri = "${TestConfig.BASE_URL}/echo_json.php?error=Failed&errorMessage=RequestFailed"
+        val request = UUHttpRequest(uri)
+        request.headers.putSingle("uu-status-code", "400")
+        request.loggingMode = UUHttpLoggingMode.Verbose
+        val session = UUHttpSession()
+
+        val response = session.execute(request)
+        Assert.assertNotNull(response.error)
+        assertEquals(400, response.httpStatusCode)
+
+        val success = UUAssert.unwrap(response.parsedResponse)
+        assert(success is ByteArray)
+        val bytes = UUAssert.unwrap(success as? ByteArray)
+        UULog.debug(LOG_TAG, "test_0005_get_with_error, Error: ${bytes.uuUtf8().getOrNull()}")
+    }
 }

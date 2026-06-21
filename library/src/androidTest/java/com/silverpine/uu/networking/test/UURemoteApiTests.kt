@@ -17,6 +17,7 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
+import kotlin.test.assertNull
 
 private const val LOG_TAG = "UURemoteApiTests"
 
@@ -116,6 +117,16 @@ class UURemoteApiTests
         UULog.debug(LOG_TAG, "test_0005_postList, Response: $success")
 
         //assertArrayReply(200, post.size, null, response)
+    }
+
+    @Test
+    fun test_0006_getEmpty() = runBlocking()
+    {
+        val response = api.getNullable(null)
+        assertNull(response.getOrNull())
+        assertNull(response.errorOrNull())
+        UULog.debug(LOG_TAG, "test_0006_getEmpty, Response: $response")
+        //assertReply(200, DEFAULT_API_OBJECT, null, response)
     }
 
 /*

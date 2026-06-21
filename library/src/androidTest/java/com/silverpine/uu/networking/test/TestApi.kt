@@ -70,6 +70,8 @@ interface ITestApi
     suspend fun postObject(obj: TestApiObject): UUResult<TestApiObject, UUError>
     suspend fun postArray(array: Array<TestApiObject>): UUResult<Array<TestApiObject>, UUError>
 
+    suspend fun getNullable(echo: TestApiObject?): UUResult<TestApiObject?, UUError>
+
     /*
     fun postObject(request: TestApiObject, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
     fun postObjectWithQueryArgs(request: TestApiObject, query: UUQueryStringArgs, completion: (UUHttpResponse<TestApiObject, TestApiError>)->Unit)
@@ -209,6 +211,47 @@ class TestApi(private val apiUrl: String): UURemoteApi(UUHttpSession()), ITestAp
         @Suppress("UNCHECKED_CAST")
         val result = (response.parsedResponse as? Array<*>) as? Array<TestApiObject>
         return if (result != null)
+        {
+            UUResult.success(result)
+        }
+        else
+        {
+            UUResult.failure(response.error ?: UUError(code = -1))
+        }
+    }
+
+    override suspend fun getNullable(echo: TestApiObject?): UUResult<TestApiObject?, UUError>
+    {
+        val queryArgs: UUQueryStringsArgs = hashMapOf()
+
+        echo?.let()
+        {
+            if (it.id.isNotEmpty())
+            {
+                queryArgs["id"] = it.id
+            }
+
+            if (it.name.isNotEmpty())
+            {
+                queryArgs["name"] = it.name
+            }
+
+            if (it.data.isNotEmpty())
+            {
+                queryArgs["data"] = it.data
+            }
+        }
+
+        val request = UUTypedHttpRequest(
+            url = "$apiUrl/empty",
+            query = queryArgs,
+            successClass = TestApiObject::class.java,
+            errorClass = TestApiError::class.java)
+
+        val response = executeWithoutAuthorizationRenewal(request)
+
+        val result = response.parsedResponse as? TestApiObject
+        return if (result == null)
         {
             UUResult.success(result)
         }
