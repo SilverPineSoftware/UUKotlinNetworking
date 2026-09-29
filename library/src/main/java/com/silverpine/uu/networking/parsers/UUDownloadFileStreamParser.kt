@@ -1,6 +1,7 @@
 package com.silverpine.uu.networking.parsers
 
 import com.silverpine.uu.core.uuCopyTo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -24,19 +25,30 @@ import java.net.HttpURLConnection
 class UUDownloadFileStreamParser(val downloadFolder: File) : UUHttpStreamParser
 {
     /**
-     * @return the [File] written under [downloadFolder], or `null` only if stream setup fails before write.
-     *   Copy errors are logged by [com.silverpine.uu.core.uuCopyTo]; a partial or empty file may still be returned.
+     * @return success containing the [File] written under [downloadFolder], or failure on file creation,
+     * copying, or closure. The output is closed on success and failure; the input remains open.
+     * A failure may leave a partial file. Coroutine cancellation is rethrown.
      */
-    override suspend fun parse(stream: InputStream, response: HttpURLConnection): Any?
+    override suspend fun parse(stream: InputStream, response: HttpURLConnection): Result<Any?>
     {
-        val fileName = File(response.url.path).name
-        val destFile = File(downloadFolder, fileName)
-        val fos = withContext(Dispatchers.IO)
+        return withContext(Dispatchers.IO)
         {
-            FileOutputStream(destFile)
+            try
+            {
+                val destFile = File(downloadFolder, File(response.url.path).name)
+                FileOutputStream(destFile).use { output ->
+                    stream.uuCopyTo(output).getOrThrow()
+                }
+                Result.success(destFile)
+            }
+            catch (ex: CancellationException)
+            {
+                throw ex
+            }
+            catch (ex: Exception)
+            {
+                Result.failure(ex)
+            }
         }
-
-        stream.uuCopyTo(fos)
-        return destFile
     }
 }

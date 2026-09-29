@@ -116,10 +116,10 @@ class UUBaseResponseHandlerTests
                 var usedErrorParser = false
                 val customHandler = object : UUBaseResponseHandler()
                 {
-                    override val successParser = uuHttpStreamParser { _, _ -> "success" }
+                    override val successParser = uuHttpStreamParser { _, _ -> Result.success("success") }
                     override val errorParser = uuHttpStreamParser { _, _ ->
                         usedErrorParser = true
-                        "error-body"
+                        Result.success("error-body")
                     }
                 }
                 val connection = HandlerTestSupport.mockConnection(statusCode = 500, body = "err".toByteArray())
@@ -143,7 +143,7 @@ class UUBaseResponseHandlerTests
                 val injectedError = UUError(99, "TestDomain")
                 val customHandler = object : UUBaseResponseHandler()
                 {
-                    override val successParser = uuHttpStreamParser { _, _ -> injectedError }
+                    override val successParser = uuHttpStreamParser { _, _ -> Result.success(injectedError) }
                     override val errorParser = UUBinaryStreamParser()
                 }
                 val connection = HandlerTestSupport.mockConnection(statusCode = 200, body = "{}".toByteArray())
@@ -153,6 +153,24 @@ class UUBaseResponseHandlerTests
                 assertSame(injectedError, response.error)
                 assertNull(response.parsedResponse)
             }
+        }
+    }
+
+    @Test
+    fun parserFailuresPreserveOriginalExceptionForSuccessAndErrorBodies() = runBlocking {
+        for (status in listOf(200, 500))
+        {
+            val failure = IOException("parse failed")
+            val customHandler = object : UUBaseResponseHandler()
+            {
+                override val successParser = uuHttpStreamParser { _, _ -> Result.failure(failure) }
+                override val errorParser = successParser
+            }
+            val connection = HandlerTestSupport.mockConnection(statusCode = status, body = "body".toByteArray())
+            val response = customHandler.handleResponse(request, connection)
+            assertEquals(UUNetworkErrorCode.PARSE_FAILURE, response.error?.uuNetworkErrorCode())
+            assertSame(failure, response.error?.exception)
+            assertNull(response.parsedResponse)
         }
     }
 

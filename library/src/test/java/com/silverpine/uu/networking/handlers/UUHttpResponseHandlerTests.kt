@@ -20,8 +20,8 @@ class UUHttpResponseHandlerTests
     fun implementationExposesSuccessAndErrorParsers()
     {
         runBlocking {
-            val successParser = uuHttpStreamParser { _, _ -> "success" }
-            val errorParser = uuHttpStreamParser { _, _ -> "error" }
+            val successParser = uuHttpStreamParser { _, _ -> Result.success("success") }
+            val errorParser = uuHttpStreamParser { _, _ -> Result.success("error") }
             val handler = RecordingHandler(successParser, errorParser)
 
             assertSame(successParser, handler.successParser)

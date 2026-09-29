@@ -11,7 +11,7 @@ import java.net.HttpURLConnection
  * (typically [kotlinx.serialization] via [com.silverpine.uu.core.UUKotlinXJsonProvider]).
  *
  * Used as the success and error parser by [com.silverpine.uu.networking.handlers.UUTypedResponseHandler].
- * Deserialization failures are swallowed; [parse] returns `null` rather than throwing.
+ * Deserialization and stream read failures are returned in [Result].
  *
  * ### Example
  * ```kotlin
@@ -28,13 +28,13 @@ import java.net.HttpURLConnection
 open class UUTypedStreamParser<DataType : Any>(private val objectClass: Class<DataType>) : UUHttpStreamParser
 {
     /**
-     * @return a deserialized instance of [DataType], or `null` if JSON parsing fails or the stream cannot be read.
+     * @return success containing the deserialized value, or failure if JSON parsing or reading fails.
      */
     override suspend fun parse(
         stream: InputStream,
         response: HttpURLConnection,
-    ): Any?
+    ): Result<Any?>
     {
-        return UUJson.fromStream(stream, objectClass).getOrNull()
+        return UUJson.fromStream(stream, objectClass)
     }
 }

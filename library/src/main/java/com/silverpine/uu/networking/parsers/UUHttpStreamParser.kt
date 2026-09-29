@@ -34,13 +34,13 @@ fun interface UUHttpStreamParser
      *   (for example gzip). Consumed by the parser implementation.
      * @param response the connection that produced [stream]; use [HttpURLConnection.url],
      *   [HttpURLConnection.contentType], or [HttpURLConnection.responseCode] when needed.
-     * @return the parsed payload (for example [ByteArray], [String], a model instance, or [java.io.File]),
-     *   or `null` when parsing fails or there is no content.
+     * @return success containing the parsed payload (for example [ByteArray], [String], a model, or
+     *   [java.io.File]), success with `null` for no content, or failure containing the parsing error.
      */
     suspend fun parse(
         stream: InputStream,
         response: HttpURLConnection,
-    ): Any?
+    ): Result<Any?>
 }
 
 /**
@@ -52,7 +52,7 @@ fun interface UUHttpStreamParser
  * ### Example
  * ```kotlin
  * val parser = uuHttpStreamParser { stream, _ ->
- *     stream.bufferedReader().readText()
+ *     runCatching { stream.bufferedReader().readText() }
  * }
  * ```
  *
@@ -60,10 +60,6 @@ fun interface UUHttpStreamParser
  * @see UUHttpStreamParser
  */
 fun uuHttpStreamParser(
-    block: suspend (stream: InputStream, response: HttpURLConnection) -> Any?,
+    block: suspend (stream: InputStream, response: HttpURLConnection) -> Result<Any?>,
 ): UUHttpStreamParser =
-    object : UUHttpStreamParser
-    {
-        override suspend fun parse(stream: InputStream, response: HttpURLConnection): Any? =
-            block(stream, response)
-    }
+    UUHttpStreamParser { stream, response -> block(stream, response) }

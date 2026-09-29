@@ -51,13 +51,13 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
             // Guard against an empty input stream
             if (readStream == null)
             {
-                return finishHandleResponse(request, urlConnection, null)
+                return finishHandleResponse(request, urlConnection, Result.success(null))
             }
 
             // If response headers indicate no content, return early
             if (urlConnection.contentLength == 0)
             {
-                return finishHandleResponse(request, urlConnection, null)
+                return finishHandleResponse(request, urlConnection, Result.success(null))
             }
 
             when (urlConnection.contentEncoding?.lowercase())
@@ -94,15 +94,25 @@ open class UUBaseResponseHandler : UUHttpResponseHandler
     private fun finishHandleResponse(
         request: UUHttpRequest,
         response: HttpURLConnection,
-        result: Any?,
+        result: Result<Any?>,
     ): UUHttpResponse
     {
-        var err: UUError? = null
-        var parsedResponse: Any? = result
+        val parseResult: Any? = result.getOrNull()
 
-        (result as? UUError)?.let()
+        var err: UUError? = null
+        var parsedResponse: Any? = parseResult
+
+        // If the parsed result is a UUError, assign it to the actual error
+        (parseResult as? UUError)?.let()
         {
             err = it
+            parsedResponse = null
+        }
+
+        // Bubble a failure on the parser into the response object
+        (result.exceptionOrNull() as? Exception)?.let()
+        { parseFailure ->
+            err = UUNetworkError.fromException(UUNetworkErrorCode.PARSE_FAILURE, parseFailure, request)
             parsedResponse = null
         }
 

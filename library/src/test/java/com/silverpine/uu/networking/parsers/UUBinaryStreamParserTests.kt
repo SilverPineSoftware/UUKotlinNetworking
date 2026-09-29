@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -29,57 +28,57 @@ class UUBinaryStreamParserTests
     inner class SuccessfulReads
     {
         @Test
-        fun readsSingleBytePayload() = runBlocking {
+        fun readsSingleBytePayload() = runBlocking<Unit> {
             val payload = ParserTestSupport.bytes(0xAB)
 
             val result = parser.parse(ParserTestSupport.stream(payload), ParserTestSupport.mockConnection())
 
-            assertInstanceOf(ByteArray::class.java, result)
-            assertArrayEquals(payload, result as ByteArray)
+            assertInstanceOf(ByteArray::class.java, result.getOrThrow())
+            assertArrayEquals(payload, result.getOrThrow() as ByteArray)
         }
 
         @Test
-        fun readsMultiBytePayload() = runBlocking {
+        fun readsMultiBytePayload() = runBlocking<Unit> {
             val payload = "binary payload".toByteArray()
 
             val result = parser.parse(ParserTestSupport.stream(payload), ParserTestSupport.mockConnection())
 
-            assertArrayEquals(payload, result as ByteArray)
+            assertArrayEquals(payload, result.getOrThrow() as ByteArray)
         }
 
         @Test
-        fun readsPayloadLargerThanDefaultBuffer() = runBlocking {
+        fun readsPayloadLargerThanDefaultBuffer() = runBlocking<Unit> {
             val payload = ByteArray(25_000) { (it % 256).toByte() }
 
             val result = parser.parse(ParserTestSupport.stream(payload), ParserTestSupport.mockConnection())
 
-            assertArrayEquals(payload, result as ByteArray)
+            assertArrayEquals(payload, result.getOrThrow() as ByteArray)
         }
 
         @Test
-        fun emptyStreamReturnsEmptyByteArray() = runBlocking {
+        fun emptyStreamReturnsEmptyByteArray() = runBlocking<Unit> {
             val result = parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection())
 
             assertNotNull(result)
-            assertArrayEquals(ByteArray(0), result as ByteArray)
+            assertArrayEquals(ByteArray(0), result.getOrThrow() as ByteArray)
         }
 
         @Test
-        fun preservesNullBytesInPayload() = runBlocking {
+        fun preservesNullBytesInPayload() = runBlocking<Unit> {
             val payload = byteArrayOf(0x00, 0x01, 0x00, 0xFF.toByte())
 
             val result = parser.parse(ParserTestSupport.stream(payload), ParserTestSupport.mockConnection())
 
-            assertArrayEquals(payload, result as ByteArray)
+            assertArrayEquals(payload, result.getOrThrow() as ByteArray)
         }
 
         @Test
-        fun ignoresHttpConnectionArgument() = runBlocking {
+        fun ignoresHttpConnectionArgument() = runBlocking<Unit> {
             val connection = ParserTestSupport.mockConnection("https://other.example.com/file.bin")
 
             val result = parser.parse(ParserTestSupport.stream("x"), connection)
 
-            assertArrayEquals("x".toByteArray(), result as ByteArray)
+            assertArrayEquals("x".toByteArray(), result.getOrThrow() as ByteArray)
         }
     }
 
@@ -87,15 +86,16 @@ class UUBinaryStreamParserTests
     inner class FailureHandling
     {
         @Test
-        fun returnsNullWhenStreamThrows() = runBlocking {
+        fun returnsFailureWhenStreamThrows() = runBlocking<Unit> {
+            val failure = IOException("read failed")
             val failingStream = object : InputStream()
             {
-                override fun read(): Int = throw IOException("read failed")
+                override fun read(): Int = throw failure
             }
 
             val result = parser.parse(failingStream, ParserTestSupport.mockConnection())
 
-            assertNull(result)
+            org.junit.jupiter.api.Assertions.assertSame(failure, result.exceptionOrNull())
         }
     }
 
@@ -103,13 +103,13 @@ class UUBinaryStreamParserTests
     inner class Subclassing
     {
         @Test
-        fun openClassCanBeExtended() = runBlocking {
+        fun openClassCanBeExtended() = runBlocking<Unit> {
             val customParser = object : UUBinaryStreamParser()
             {
                 override suspend fun parse(
                     stream: java.io.InputStream,
                     response: java.net.HttpURLConnection,
-                ): Any? = "override"
+                ): Result<Any?> = Result.success("override")
             }
 
             val result = customParser.parse(
@@ -117,7 +117,7 @@ class UUBinaryStreamParserTests
                 ParserTestSupport.mockConnection(),
             )
 
-            assertEquals("override", result)
+            assertEquals("override", result.getOrThrow())
         }
     }
 }

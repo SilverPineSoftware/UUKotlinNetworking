@@ -142,8 +142,7 @@ class UURawHttpTests
             override val successParser = uuHttpStreamParser { stream, _ ->
                 val applicationContext = InstrumentationRegistry.getInstrumentation().targetContext
                 val outputFolder = Paths.get("${applicationContext.noBackupFilesDir}/uu2")
-                stream.uuUnzip(outputFolder)
-                outputFolder
+                stream.uuUnzip(outputFolder).map { outputFolder }
             }
         }
 

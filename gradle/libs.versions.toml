@@ -7,7 +7,7 @@ compose_bom = "2026.09.00"
 constraintlayout = "2.2.2"
 material = "1.14.0"
 
-uu_core = "0.0.35"
+uu_core = "0.0.36"
 uu_test = "0.0.25"
 
 [libraries]

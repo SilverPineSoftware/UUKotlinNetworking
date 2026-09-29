@@ -11,7 +11,7 @@ import java.net.HttpURLConnection
  * success and error bodies when no custom handler overrides are supplied. Suitable for opaque
  * binary payloads, unknown content types, or when the caller will interpret bytes later.
  *
- * I/O errors during [com.silverpine.uu.core.uuReadAll] are logged and surfaced as a `null` return value.
+ * I/O errors during [com.silverpine.uu.core.uuReadAll] are logged and returned as failures containing the original exception.
  *
  * @see UUHttpStreamParser
  * @see com.silverpine.uu.networking.handlers.UUBaseResponseHandler
@@ -19,12 +19,12 @@ import java.net.HttpURLConnection
 open class UUBinaryStreamParser : UUHttpStreamParser
 {
     /**
-     * @return the full body as a [ByteArray], an empty array when the stream is empty, or `null` on read failure.
+     * @return success containing the full body as a [ByteArray] (empty for an empty stream), or a read failure.
      */
     override suspend fun parse(
         stream: InputStream,
         response: HttpURLConnection,
-    ): Any?
+    ): Result<Any?>
     {
         return stream.uuReadAll()
     }

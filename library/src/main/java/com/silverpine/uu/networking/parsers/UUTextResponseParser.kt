@@ -17,11 +17,10 @@ import java.net.HttpURLConnection
 class UUTextResponseParser : UUHttpStreamParser
 {
     /**
-     * @return the response body as a [String], an empty string when the body is empty, or `null` on read failure.
+     * @return success containing the response body as a [String] (empty for an empty stream), or a read failure.
      */
-    override suspend fun parse(stream: InputStream, response: HttpURLConnection): Any?
+    override suspend fun parse(stream: InputStream, response: HttpURLConnection): Result<Any?>
     {
-        val bytes = stream.uuReadAll() ?: return null
-        return String(bytes)
+        return stream.uuReadAll().map { String(it) }
     }
 }

@@ -19,25 +19,25 @@ class UUHttpStreamParserTests
     inner class UuHttpStreamParserFactory
     {
         @Test
-        fun returnsValueFromLambda() = runBlocking {
-            val parser = uuHttpStreamParser { _, _ -> "parsed" }
+        fun returnsValueFromLambda() = runBlocking<Unit> {
+            val parser = uuHttpStreamParser { _, _ -> Result.success("parsed") }
 
             val result = parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection())
 
-            assertEquals("parsed", result)
+            assertEquals("parsed", result.getOrThrow())
         }
 
         @Test
-        fun returnsNullWhenLambdaReturnsNull() = runBlocking {
-            val parser = uuHttpStreamParser { _, _ -> null }
+        fun returnsNullWhenLambdaReturnsNull() = runBlocking<Unit> {
+            val parser = uuHttpStreamParser { _, _ -> Result.success(null) }
 
             val result = parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection())
 
-            assertNull(result)
+            assertNull(result.getOrThrow())
         }
 
         @Test
-        fun passesStreamAndResponseToLambda() = runBlocking {
+        fun passesStreamAndResponseToLambda() = runBlocking<Unit> {
             val stream = ParserTestSupport.stream("body")
             val connection = ParserTestSupport.mockConnection("https://api.example.com/items/1")
             var capturedStream: InputStream? = null
@@ -46,7 +46,7 @@ class UUHttpStreamParserTests
             val parser = uuHttpStreamParser { s, r ->
                 capturedStream = s
                 capturedConnection = r
-                null
+                Result.success(null)
             }
 
             parser.parse(stream, connection)
@@ -56,53 +56,61 @@ class UUHttpStreamParserTests
         }
 
         @Test
-        fun canReadStreamInsideSuspendLambda() = runBlocking {
+        fun canReadStreamInsideSuspendLambda() = runBlocking<Unit> {
             val parser = uuHttpStreamParser { stream, _ ->
-                stream.bufferedReader().readText()
+                Result.success(stream.bufferedReader().readText())
             }
 
             val result = parser.parse(ParserTestSupport.stream("hello"), ParserTestSupport.mockConnection())
 
-            assertEquals("hello", result)
+            assertEquals("hello", result.getOrThrow())
         }
 
         @Test
-        fun implementsUUHttpStreamParserInterface() = runBlocking {
-            val parser: UUHttpStreamParser = uuHttpStreamParser { _, _ -> 42 }
+        fun implementsUUHttpStreamParserInterface() = runBlocking<Unit> {
+            val parser: UUHttpStreamParser = uuHttpStreamParser { _, _ -> Result.success(42) }
 
             assertTrue(parser is UUHttpStreamParser)
-            assertEquals(42, parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection()))
+            assertEquals(42, parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection()).getOrThrow())
         }
 
         @Test
-        fun multipleInvocationsAreIndependent() = runBlocking {
+        fun multipleInvocationsAreIndependent() = runBlocking<Unit> {
             var callCount = 0
             val parser = uuHttpStreamParser { _, _ ->
                 callCount++
-                callCount
+                Result.success(callCount)
             }
 
-            assertEquals(1, parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection()))
-            assertEquals(2, parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection()))
+            assertEquals(1, parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection()).getOrThrow())
+            assertEquals(2, parser.parse(ParserTestSupport.stream(ByteArray(0)), ParserTestSupport.mockConnection()).getOrThrow())
         }
+    }
+
+    @Test
+    fun factoryPreservesFailure() = runBlocking<Unit> {
+        val failure = java.io.IOException("parse failed")
+        val parser = uuHttpStreamParser { _, _ -> Result.failure(failure) }
+        val result = parser.parse(ParserTestSupport.stream("body"), ParserTestSupport.mockConnection())
+        assertSame(failure, result.exceptionOrNull())
     }
 
     @Nested
     inner class DirectImplementation
     {
         @Test
-        fun anonymousObjectCanOverrideParse() = runBlocking {
+        fun anonymousObjectCanOverrideParse() = runBlocking<Unit> {
             val parser = object : UUHttpStreamParser
             {
                 override suspend fun parse(
                     stream: InputStream,
                     response: HttpURLConnection,
-                ): Any? = stream.available()
+                ): Result<Any?> = Result.success(stream.available())
             }
 
             val result = parser.parse(ParserTestSupport.stream("abc"), ParserTestSupport.mockConnection())
 
-            assertEquals(3, result)
+            assertEquals(3, result.getOrThrow())
         }
     }
 }

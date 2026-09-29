@@ -34,7 +34,7 @@ class UUDownloadFileStreamParserTests
     inner class SuccessfulDownloads
     {
         @Test
-        fun writesPayloadToFileNamedFromUrlPath() = runBlocking {
+        fun writesPayloadToFileNamedFromUrlPath() = runBlocking<Unit> {
             val payload = "file contents".toByteArray()
             val connection = ParserTestSupport.mockConnection(
                 "https://cdn.example.com/downloads/archive.zip",
@@ -42,8 +42,8 @@ class UUDownloadFileStreamParserTests
 
             val result = parser.parse(ParserTestSupport.stream(payload), connection)
 
-            assertInstanceOf(File::class.java, result)
-            val destFile = result as File
+            assertInstanceOf(File::class.java, result.getOrThrow())
+            val destFile = result.getOrThrow() as File
             assertEquals(downloadFolder, destFile.parentFile)
             assertEquals("archive.zip", destFile.name)
             assertTrue(destFile.exists())
@@ -51,7 +51,7 @@ class UUDownloadFileStreamParserTests
         }
 
         @Test
-        fun usesLastPathSegmentAsFileName() = runBlocking {
+        fun usesLastPathSegmentAsFileName() = runBlocking<Unit> {
             val connection = ParserTestSupport.mockConnection(
                 "https://example.com/a/b/c/report.pdf",
             )
@@ -59,59 +59,59 @@ class UUDownloadFileStreamParserTests
             val result = parser.parse(
                 ParserTestSupport.stream("pdf-bytes"),
                 connection,
-            ) as File
+            ).getOrThrow() as File
 
             assertEquals("report.pdf", result.name)
             assertEquals("pdf-bytes", result.readText())
         }
 
         @Test
-        fun overwritesExistingFileWithSameName() = runBlocking {
+        fun overwritesExistingFileWithSameName() = runBlocking<Unit> {
             val existing = File(downloadFolder, "data.bin").apply { writeText("old") }
             val connection = ParserTestSupport.mockConnection("https://example.com/data.bin")
 
             val result = parser.parse(
                 ParserTestSupport.stream("new"),
                 connection,
-            ) as File
+            ).getOrThrow() as File
 
             assertEquals(existing.absolutePath, result.absolutePath)
             assertEquals("new", result.readText())
         }
 
         @Test
-        fun emptyStreamCreatesEmptyFile() = runBlocking {
+        fun emptyStreamCreatesEmptyFile() = runBlocking<Unit> {
             val connection = ParserTestSupport.mockConnection("https://example.com/empty.dat")
 
             val result = parser.parse(
                 ParserTestSupport.stream(ByteArray(0)),
                 connection,
-            ) as File
+            ).getOrThrow() as File
 
             assertTrue(result.exists())
             assertEquals(0, result.length())
         }
 
         @Test
-        fun writesBinaryPayloadWithoutCorruption() = runBlocking {
+        fun writesBinaryPayloadWithoutCorruption() = runBlocking<Unit> {
             val payload = byteArrayOf(0x00, 0x10, 0xFF.toByte(), 0x7F)
 
             val result = parser.parse(
                 ParserTestSupport.stream(payload),
                 ParserTestSupport.mockConnection("https://example.com/raw.bin"),
-            ) as File
+            ).getOrThrow() as File
 
             assertArrayEquals(payload, result.readBytes())
         }
 
         @Test
-        fun writesLargePayload() = runBlocking {
+        fun writesLargePayload() = runBlocking<Unit> {
             val payload = ByteArray(50_000) { (it % 256).toByte() }
 
             val result = parser.parse(
                 ParserTestSupport.stream(payload),
                 ParserTestSupport.mockConnection("https://example.com/large.bin"),
-            ) as File
+            ).getOrThrow() as File
 
             assertArrayEquals(payload, result.readBytes())
         }
@@ -121,19 +121,19 @@ class UUDownloadFileStreamParserTests
     inner class UrlHandling
     {
         @Test
-        fun fileNameWithoutExtensionIsPreserved() = runBlocking {
+        fun fileNameWithoutExtensionIsPreserved() = runBlocking<Unit> {
             val connection = ParserTestSupport.mockConnection("https://example.com/README")
 
             val result = parser.parse(
                 ParserTestSupport.stream("readme"),
                 connection,
-            ) as File
+            ).getOrThrow() as File
 
             assertEquals("README", result.name)
         }
 
         @Test
-        fun queryStringDoesNotAffectFileName() = runBlocking {
+        fun queryStringDoesNotAffectFileName() = runBlocking<Unit> {
             val connection = ParserTestSupport.mockConnection(
                 "https://example.com/assets/logo.png?version=2",
             )
@@ -141,7 +141,7 @@ class UUDownloadFileStreamParserTests
             val result = parser.parse(
                 ParserTestSupport.stream("png"),
                 connection,
-            ) as File
+            ).getOrThrow() as File
 
             assertEquals("logo.png", result.name)
         }
@@ -151,14 +151,14 @@ class UUDownloadFileStreamParserTests
     inner class DownloadFolder
     {
         @Test
-        fun createsFileInsideConfiguredFolder() = runBlocking {
+        fun createsFileInsideConfiguredFolder() = runBlocking<Unit> {
             val nestedFolder = File(downloadFolder, "nested").apply { mkdirs() }
             val nestedParser = UUDownloadFileStreamParser(nestedFolder)
 
             val result = nestedParser.parse(
                 ParserTestSupport.stream("nested-content"),
                 ParserTestSupport.mockConnection("https://example.com/nested.txt"),
-            ) as File
+            ).getOrThrow() as File
 
             assertEquals(nestedFolder.absolutePath, result.parentFile?.absolutePath)
             assertFalse(File(downloadFolder, "nested.txt").exists())
@@ -166,27 +166,30 @@ class UUDownloadFileStreamParserTests
         }
     }
 
+    @Test
+    fun fileCreationFailureIsReturned() = runBlocking<Unit> {
+        val parser = UUDownloadFileStreamParser(File(downloadFolder, "missing/directory"))
+        val result = parser.parse(ParserTestSupport.stream("body"), ParserTestSupport.mockConnection())
+        assertInstanceOf(IOException::class.java, result.exceptionOrNull())
+    }
+
     @Nested
     inner class FailureHandling
     {
         @Test
-        fun doesNotThrowWhenStreamReadFails() = runBlocking {
+        fun doesNotThrowWhenStreamReadFails() = runBlocking<Unit> {
+            val failure = IOException("read failed")
             val failingStream = object : InputStream()
             {
-                override fun read(): Int = throw IOException("read failed")
+                override fun read(): Int = throw failure
             }
 
-            val result = runCatching {
-                parser.parse(
-                    failingStream,
-                    ParserTestSupport.mockConnection("https://example.com/fail.bin"),
-                )
-            }
+            val result = parser.parse(
+                failingStream,
+                ParserTestSupport.mockConnection("https://example.com/fail.bin"),
+            )
+            org.junit.jupiter.api.Assertions.assertSame(failure, result.exceptionOrNull())
 
-            assertTrue(result.isSuccess)
-            val file = result.getOrNull() as File
-            assertTrue(file.exists())
-            assertEquals(0, file.length())
         }
     }
 }

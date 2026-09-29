@@ -7,7 +7,6 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -40,30 +39,30 @@ class UUTypedStreamParserTests
     inner class SuccessfulParsing
     {
         @Test
-        fun parsesJsonObjectIntoTargetClass() = runBlocking {
+        fun parsesJsonObjectIntoTargetClass() = runBlocking<Unit> {
             val parser = UUTypedStreamParser(ParserTestPayload::class.java)
             val body = """{"id":"item-42","count":99}"""
 
             val result = parser.parse(ParserTestSupport.stream(body), ParserTestSupport.mockConnection())
 
-            assertInstanceOf(ParserTestPayload::class.java, result)
-            val payload = result as ParserTestPayload
+            assertInstanceOf(ParserTestPayload::class.java, result.getOrThrow())
+            val payload = result.getOrThrow() as ParserTestPayload
             assertEquals("item-42", payload.id)
             assertEquals(99, payload.count)
         }
 
         @Test
-        fun ignoresUnknownJsonKeys() = runBlocking {
+        fun ignoresUnknownJsonKeys() = runBlocking<Unit> {
             val parser = UUTypedStreamParser(ParserTestPayload::class.java)
             val body = """{"id":"x","count":1,"extra":"ignored"}"""
 
             val result = parser.parse(ParserTestSupport.stream(body), ParserTestSupport.mockConnection())
 
-            assertEquals(ParserTestPayload(id = "x", count = 1), result)
+            assertEquals(ParserTestPayload(id = "x", count = 1), result.getOrThrow())
         }
 
         @Test
-        fun parsesMinimalJsonObject() = runBlocking {
+        fun parsesMinimalJsonObject() = runBlocking<Unit> {
             val parser = UUTypedStreamParser(ParserTestPayload::class.java)
 
             val result = parser.parse(
@@ -71,7 +70,7 @@ class UUTypedStreamParserTests
                 ParserTestSupport.mockConnection(),
             )
 
-            assertEquals(ParserTestPayload(), result)
+            assertEquals(ParserTestPayload(), result.getOrThrow())
         }
     }
 
@@ -79,7 +78,7 @@ class UUTypedStreamParserTests
     inner class FailureHandling
     {
         @Test
-        fun returnsNullForMalformedJson() = runBlocking {
+        fun returnsFailureForMalformedJson() = runBlocking<Unit> {
             val parser = UUTypedStreamParser(ParserTestPayload::class.java)
 
             val result = parser.parse(
@@ -87,11 +86,11 @@ class UUTypedStreamParserTests
                 ParserTestSupport.mockConnection(),
             )
 
-            assertNull(result)
+            assertInstanceOf(Exception::class.java, result.exceptionOrNull())
         }
 
         @Test
-        fun returnsNullForJsonTypeMismatch() = runBlocking {
+        fun returnsFailureForJsonTypeMismatch() = runBlocking<Unit> {
             val parser = UUTypedStreamParser(ParserTestPayload::class.java)
 
             val result = parser.parse(
@@ -99,11 +98,11 @@ class UUTypedStreamParserTests
                 ParserTestSupport.mockConnection(),
             )
 
-            assertNull(result)
+            assertInstanceOf(Exception::class.java, result.exceptionOrNull())
         }
 
         @Test
-        fun returnsNullForEmptyStream() = runBlocking {
+        fun returnsFailureForEmptyStream() = runBlocking<Unit> {
             val parser = UUTypedStreamParser(ParserTestPayload::class.java)
 
             val result = parser.parse(
@@ -111,20 +110,21 @@ class UUTypedStreamParserTests
                 ParserTestSupport.mockConnection(),
             )
 
-            assertNull(result)
+            assertInstanceOf(Exception::class.java, result.exceptionOrNull())
         }
 
         @Test
-        fun returnsNullWhenStreamThrows() = runBlocking {
+        fun returnsFailureWhenStreamThrows() = runBlocking<Unit> {
             val parser = UUTypedStreamParser(ParserTestPayload::class.java)
+            val failure = IOException("read failed")
             val failingStream = object : InputStream()
             {
-                override fun read(): Int = throw IOException("read failed")
+                override fun read(): Int = throw failure
             }
 
             val result = parser.parse(failingStream, ParserTestSupport.mockConnection())
 
-            assertNull(result)
+            org.junit.jupiter.api.Assertions.assertSame(failure, result.exceptionOrNull())
         }
     }
 
@@ -132,13 +132,13 @@ class UUTypedStreamParserTests
     inner class Subclassing
     {
         @Test
-        fun openClassCanBeExtended() = runBlocking {
+        fun openClassCanBeExtended() = runBlocking<Unit> {
             val customParser = object : UUTypedStreamParser<ParserTestPayload>(ParserTestPayload::class.java)
             {
                 override suspend fun parse(
                     stream: InputStream,
                     response: java.net.HttpURLConnection,
-                ): Any? = ParserTestPayload(id = "custom", count = -1)
+                ): Result<Any?> = Result.success(ParserTestPayload(id = "custom", count = -1))
             }
 
             val result = customParser.parse(
@@ -146,7 +146,7 @@ class UUTypedStreamParserTests
                 ParserTestSupport.mockConnection(),
             )
 
-            assertEquals(ParserTestPayload(id = "custom", count = -1), result)
+            assertEquals(ParserTestPayload(id = "custom", count = -1), result.getOrThrow())
         }
     }
 }
