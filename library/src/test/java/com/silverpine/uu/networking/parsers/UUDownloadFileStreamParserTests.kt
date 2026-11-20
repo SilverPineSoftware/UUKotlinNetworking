@@ -9,14 +9,11 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 
-@ExtendWith(RobolectricExtension::class)
 class UUDownloadFileStreamParserTests
 {
     @TempDir

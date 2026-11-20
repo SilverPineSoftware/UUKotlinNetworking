@@ -10,12 +10,9 @@ import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 import java.io.IOException
 import java.io.InputStream
 
-@ExtendWith(RobolectricExtension::class)
 class UUTypedStreamParserTests
 {
     private val json = Json {

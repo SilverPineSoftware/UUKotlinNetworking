@@ -7,12 +7,9 @@ import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 import java.io.InputStream
 import java.net.HttpURLConnection
 
-@ExtendWith(RobolectricExtension::class)
 class UUHttpStreamParserTests
 {
     @Nested
