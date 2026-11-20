@@ -19,11 +19,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
+import com.silverpine.uu.networking.AndroidErrorMocks
 import java.io.IOException
 import java.net.HttpURLConnection
 
-@ExtendWith(RobolectricExtension::class)
+@ExtendWith(AndroidErrorMocks::class)
 class UUBaseResponseHandlerTests
 {
     private lateinit var handler: UUBaseResponseHandler

@@ -24,7 +24,6 @@ dependencies {
     testImplementation(uuBuild.mockito.junit.jupiter)
     testImplementation(uuBuild.mockito.core)
     testImplementation(uuBuild.mockito.kotlin)
-    testImplementation(uuBuild.robolectric)
     testImplementation(libs.uu.test.ktx)
 
     androidTestImplementation(uuBuild.androidx.junit)

@@ -4,14 +4,13 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLException
 
-@ExtendWith(RobolectricExtension::class)
-class UUNetworkErrorRobolectricTests
+@ExtendWith(AndroidErrorMocks::class)
+class UUNetworkErrorExTests
 {
     @Test
     fun makeError_setsDescriptionAndResolution()
@@ -27,7 +26,7 @@ class UUNetworkErrorRobolectricTests
     @Test
     fun makeError_fillsRequestFieldsInUserInfo()
     {
-        val request = UUHttpRequest(url = "https://api.example.com/items", method = UUHttpMethod.POST)
+        val request = mockRequestUrl(UUHttpRequest(url = "https://api.example.com/items", method = UUHttpMethod.POST))
         val error = UUNetworkError.makeError(UUNetworkErrorCode.HTTP_FAILURE, request)
 
         assertEquals("POST", error.userInfo?.getString(UUNetworkError.USER_INFO_KEY_HTTP_METHOD))
@@ -86,7 +85,7 @@ class UUNetworkErrorRobolectricTests
     @Test
     fun create_maps401ToAuthorizationNeededWithStatusCode()
     {
-        val request = UUHttpRequest(url = "https://api.example.com/secure")
+        val request = mockRequestUrl(UUHttpRequest(url = "https://api.example.com/secure"))
         val error = UUNetworkError.create(request, 401, """{"message":"unauthorized"}""")
 
         assertEquals(UUNetworkErrorCode.AUTHORIZATION_NEEDED, error.uuNetworkErrorCode())

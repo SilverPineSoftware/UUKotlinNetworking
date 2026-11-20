@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
+import com.silverpine.uu.networking.AndroidErrorMocks
 import java.io.File
 
-@ExtendWith(RobolectricExtension::class)
+@ExtendWith(AndroidErrorMocks::class)
 class UUFileResponseHandlerTests
 {
     @TempDir

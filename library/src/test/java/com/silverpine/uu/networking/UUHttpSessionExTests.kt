@@ -14,7 +14,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
+
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -22,10 +22,10 @@ import java.net.URL
 
 /**
  * [UUHttpSession.execute] paths that require [UUNetworkError.makeError] / [UUNetworkError.fromException]
- * (Android [android.os.Bundle]).
+ * with Android [android.os.Bundle] construction mocked on the test thread.
  */
-@ExtendWith(RobolectricExtension::class)
-class UUHttpSessionRobolectricTests
+@ExtendWith(AndroidErrorMocks::class)
+class UUHttpSessionExTests
 {
     private val requestUrl = "https://api.example.com/test"
 
@@ -33,7 +33,8 @@ class UUHttpSessionRobolectricTests
         url: String = requestUrl,
         configure: UUHttpRequest.() -> Unit = {},
     ): UUHttpRequest =
-        UUHttpRequest(url = url).apply {
+        mockRequestUrl(UUHttpRequest(url = url)).apply {
+            loggingMode = emptyArray()
             connectivityProvider = mock {
                 on { checkConnection() } doReturn null
             }

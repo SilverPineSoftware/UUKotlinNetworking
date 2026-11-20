@@ -1,6 +1,7 @@
 package com.silverpine.uu.networking.handlers
 
 import com.silverpine.uu.networking.UUHttpRequest
+import com.silverpine.uu.networking.mockRequestUrl
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import java.io.ByteArrayInputStream
@@ -11,7 +12,7 @@ import java.util.zip.GZIPOutputStream
 internal object HandlerTestSupport
 {
     fun request(url: String = "https://api.example.com/resource"): UUHttpRequest =
-        UUHttpRequest(url = url).apply {
+        mockRequestUrl(UUHttpRequest(url = url)).apply {
             loggingMode = emptyArray()
         }
 

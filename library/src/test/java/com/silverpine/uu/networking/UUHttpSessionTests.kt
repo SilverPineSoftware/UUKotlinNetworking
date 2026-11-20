@@ -20,7 +20,7 @@ import java.net.URL
 /**
  * JVM unit tests for [UUHttpSession.execute] using stubbed connection/handler results.
  *
- * Paths that require real [UUNetworkError] / [android.os.Bundle] are in [UUHttpSessionRobolectricTests].
+ * Paths that require real [UUNetworkError] / [android.os.Bundle] are in [UUHttpSessionExTests].
  */
 class UUHttpSessionTests
 {

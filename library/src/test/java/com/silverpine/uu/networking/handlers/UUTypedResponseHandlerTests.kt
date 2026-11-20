@@ -16,9 +16,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
+import com.silverpine.uu.networking.AndroidErrorMocks
 
-@ExtendWith(RobolectricExtension::class)
+@ExtendWith(AndroidErrorMocks::class)
 class UUTypedResponseHandlerTests
 {
     private val json = Json {

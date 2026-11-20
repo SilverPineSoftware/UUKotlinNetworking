@@ -9,11 +9,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import tech.apter.junit.jupiter.robolectric.RobolectricExtension
 import java.net.HttpURLConnection
 
-@ExtendWith(RobolectricExtension::class)
 class UUHttpResponseHandlerTests
 {
     @Test
